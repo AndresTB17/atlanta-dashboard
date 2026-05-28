@@ -651,7 +651,15 @@ function selectSupervisor(sup){
     return {...r,Fecha:f};
   }).filter(r=>String(r.Usuario||'').trim()===sup);
 
-  const recSup=allRec.filter(r=>String(r.mes_año||'')===mesSel&&String(r.supervisor||'')===sup);
+  // Filtrar por mes usando tanto mes_año como el campo fecha
+const [mm,yy]=mesSel.split('/');
+const prefixFecha=`${yy}-${mm.padStart(2,'0')}`; // "2026-04"
+const recSup=allRec.filter(r=>{
+  const mismoMes = String(r.mes_año||'')===mesSel || String(r.fecha||'').startsWith(prefixFecha);
+  const mismoSup = String(r.supervisor||'').trim()===sup;
+  return mismoMes && mismoSup;
+});
+console.log(`Recorridos de ${sup} en ${mesSel}: ${recSup.length}`, recSup[0]);
   const kpisMes=allKpis.filter(r=>String(r.mes_año||'')===mesSel);
   const dias=num(kpisMes[kpisMes.length-1]?.dias_transcurridos)||1;
   const total=rawSup.length;
