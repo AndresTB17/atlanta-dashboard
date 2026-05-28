@@ -56,6 +56,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 #loading p{color:var(--muted);font-size:14px}
 #error{display:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:20px;margin:20px 0;color:#fca5a5;font-size:14px;line-height:1.7}
 #dashboard{display:none}
+#mes-loading{display:none;text-align:center;padding:20px;color:var(--muted);font-size:13px}
 
 /* SCORECARDS */
 .sc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
@@ -75,7 +76,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .card-title{font-size:11px;font-weight:500;color:var(--muted);margin-bottom:14px;text-transform:uppercase;letter-spacing:0.8px;display:flex;align-items:center;justify-content:space-between}
 .card-badge{font-size:10px;background:var(--surface2);padding:3px 8px;border-radius:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0}
 
-/* ROW LAYOUTS */
+/* LAYOUTS */
 .row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
 .row-full{margin-bottom:18px}
 @media(max-width:900px){.row-2{grid-template-columns:1fr}}
@@ -106,7 +107,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 /* SUPERVISOR DETAIL PANEL */
 #sup-detail{display:none;background:var(--surface2);border:1px solid var(--accent);border-radius:14px;padding:20px;margin-bottom:18px;animation:fadeUp 0.3s ease}
 .sup-detail-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.sup-detail-name{font-size:16px;font-weight:600;color:var(--text)}
+.sup-detail-name{font-size:16px;font-weight:600}
 .sup-detail-sub{font-size:12px;color:var(--muted);margin-top:2px}
 .close-btn{font-size:12px;padding:4px 10px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer}
 .close-btn:hover{color:var(--text)}
@@ -115,7 +116,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .sup-kpi{background:var(--surface);border-radius:10px;padding:12px;text-align:center}
 .sup-kpi-val{font-size:22px;font-weight:600;font-family:var(--mono);letter-spacing:-0.5px}
 .sup-kpi-label{font-size:11px;color:var(--muted);margin-top:3px}
-.detail-tabs{display:flex;gap:4px;margin-bottom:12px}
+.detail-tabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap}
 .detail-tab{font-size:12px;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.15s}
 .detail-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .detail-content{display:none}.detail-content.active{display:block}
@@ -131,24 +132,17 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .donut-val{font-size:13px;font-weight:500;font-family:var(--mono)}
 .donut-pct{font-size:11px;color:var(--muted);margin-left:4px}
 
-/* RECORRIDOS */
-.rec-table{width:100%;border-collapse:collapse}
-.rec-table th{font-size:11px;color:var(--muted);font-weight:500;text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.5px}
-.rec-table td{font-size:12px;padding:7px 8px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:top}
-.rec-table tr:last-child td{border-bottom:none}
-.rec-table tr:hover td{background:rgba(255,255,255,0.02)}
+/* TABLES */
+.rec-table,.visit-table{width:100%;border-collapse:collapse}
+.rec-table th,.visit-table th{font-size:11px;color:var(--muted);font-weight:500;text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.5px}
+.rec-table td,.visit-table td{font-size:12px;padding:7px 8px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:top}
+.rec-table tr:last-child td,.visit-table tr:last-child td{border-bottom:none}
+.rec-table tr:hover td,.visit-table tr:hover td{background:rgba(255,255,255,0.02)}
 .time-badge{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:6px;font-weight:500}
 .time-ok{background:rgba(16,185,129,0.12);color:#6ee7b7}
 .time-warn{background:rgba(245,158,11,0.12);color:#fcd34d}
-.cliente-name{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;display:inline-block}
+.cliente-name{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;display:inline-block}
 .no-data{color:var(--muted);font-size:13px;padding:16px 0;text-align:center}
-
-/* DETAIL VISITAS TABLE */
-.visit-table{width:100%;border-collapse:collapse;font-size:12px}
-.visit-table th{color:var(--muted);font-weight:500;text-align:left;padding:5px 8px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.4px;font-size:11px}
-.visit-table td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.03)}
-.visit-table tr:last-child td{border-bottom:none}
-.visit-table tr:hover td{background:rgba(255,255,255,0.02)}
 
 /* TABS */
 .tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
@@ -204,7 +198,9 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 
   <div id="loading"><div class="spinner"></div><p>Cargando datos...</p></div>
   <div id="error"></div>
+
   <div id="dashboard">
+    <div id="mes-loading"><div class="spinner" style="width:24px;height:24px;margin:0 auto 8px"></div>Cargando mes...</div>
 
     <!-- SCORECARDS -->
     <div class="sc-grid">
@@ -221,7 +217,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
         <div class="sc-bar-track"><div class="sc-bar-fill" id="bar-pct" style="width:0%;background:#10b981"></div></div>
       </div>
       <div class="sc" style="--accent-color:#f59e0b">
-        <div class="sc-label">Proyección mes</div>
+        <div class="sc-label" id="sc-proy-label">Proyección mes</div>
         <div class="sc-value" id="sc-proy">—</div>
         <div class="sc-delta">Promedio: <span id="sc-prom">—</span>/día</div>
         <div class="sc-bar-track"><div class="sc-bar-fill" id="bar-proy" style="width:0%;background:#f59e0b"></div></div>
@@ -312,7 +308,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       <div id="detail-puestos" class="detail-content"></div>
     </div>
 
-    <!-- FILA 3: Tiempos de recorrido general -->
+    <!-- FILA 3: Recorridos generales -->
     <div class="row-full">
       <div class="card">
         <div class="card-title">
@@ -323,7 +319,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
           <button class="tab active" data-sup="all" onclick="switchTab('all')">Todos</button>
           <div id="sup-tabs" style="display:contents"></div>
         </div>
-        <div id="recorridos-content"><div class="no-data">Calculando tiempos...</div></div>
+        <div id="recorridos-content"><div class="no-data">Sin datos</div></div>
       </div>
     </div>
 
@@ -337,17 +333,18 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 </div>
 
 <script>
-// ═══════════════════════════════════════
-// CONFIG
-// ═══════════════════════════════════════
 const PASSWORD = 'Atlanta2026*';
 const SHEET_ID = '1ZQVWzc64NTw4TZMLdRoqXGKsG0tNDVFlr9wNezwMNc0';
 const SK = 'atl_auth';
 const SUP_COLORS = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#ec4899','#06b6d4','#84cc16','#f97316','#a78bfa'];
+const MESES_ES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-// ═══════════════════════════════════════
-// AUTH
-// ═══════════════════════════════════════
+// Estado
+let allKpis=[], allRec=[];
+let rawCache={};  // {sheetKey: [rows]}  sheetKey = "datos_2026_05"
+let mesSel='', supSel='';
+
+// ── Auth ──
 function checkPwd(){
   const v=document.getElementById('pwd').value;
   if(v===PASSWORD){
@@ -369,49 +366,73 @@ if(sessionStorage.getItem(SK)==='1'){
   document.getElementById('app').style.display='block';
 }
 
-// ═══════════════════════════════════════
-// DATA
-// ═══════════════════════════════════════
-let allKpis=[], allRaw=[], allRec=[];
-let mesSel='', supSel='';
-
+// ── Sheets ──
 function gvizUrl(s){return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(s)}`;}
+
 function parseGviz(text){
   const json=JSON.parse(text.replace(/^[^\(]+\(/,'').replace(/\);\s*$/,''));
   const rows=json.table.rows;
   if(!rows||rows.length<2)return[];
   const hdrs=rows[0].c.map(c=>c?c.v:'');
-  return rows.slice(1).map(r=>Object.fromEntries(hdrs.map((h,i)=>[h,r.c[i]?r.c[i].v:''])));
+  return rows.slice(1).map(r=>Object.fromEntries(hdrs.map((h,i)=>{
+    const cell=r.c[i];
+    // Manejar objetos Date de gviz (vienen como {v: "Date(2026,3,30)", f: "30/04/2026"})
+    let val='';
+    if(cell){
+      if(typeof cell.v==='string') val=cell.v;
+      else if(cell.f) val=cell.f;  // usar valor formateado
+      else if(cell.v!==null&&cell.v!==undefined) val=String(cell.v);
+    }
+    return [h,val];
+  })));
 }
+
 async function fetchSheet(name){
   const res=await fetch(gvizUrl(name));
   if(!res.ok)throw new Error(`No se pudo leer "${name}"`);
   return parseGviz(await res.text());
+}
+async function fetchSheetSafe(name){
+  try{return await fetchSheet(name);}catch{return[];}
 }
 
 const fmt=n=>(n===''||n==null)?'—':Number(n).toLocaleString('es-CO');
 const fmtPct=n=>(n===''||n==null)?'—':Number(n).toFixed(1)+'%';
 const num=n=>Number(n)||0;
 
-// ═══════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════
+// ── Convertir "MM/YYYY" a sheet key "datos_YYYY_MM" ──
+function mesAnoToKey(mesAno){
+  const [mm,yy]=String(mesAno).split('/');
+  return `datos_${yy}_${mm.padStart(2,'0')}`;
+}
+
+// ── Label legible ──
+function mesLabel(mesAno){
+  const [mm,yy]=String(mesAno).split('/');
+  return `${MESES_ES[parseInt(mm)]||mesAno} ${yy}`;
+}
+
+// ── INIT ──
 async function init(){
   try{
-    [allKpis,allRaw,allRec]=await Promise.all([
+    [allKpis,allRec]=await Promise.all([
       fetchSheet('kpis_diarios'),
-      fetchSheet('datos_crudos'),
-      fetchSheet('tiempos_recorrido').catch(()=>[])
+      fetchSheetSafe('tiempos_recorrido')
     ]);
     if(!allKpis.length)throw new Error('La hoja kpis_diarios está vacía');
 
-    // Detectar meses disponibles
-    const meses=[...new Set(allKpis.map(r=>String(r.mes_año||'')).filter(Boolean))];
+    // Detectar meses únicos ordenados
+    const mesesSet=new Set(allKpis.map(r=>String(r.mes_año||'')).filter(Boolean));
+    const meses=[...mesesSet].sort((a,b)=>{
+      const [ma,ya]=a.split('/'); const [mb,yb]=b.split('/');
+      return ya!==yb?parseInt(ya)-parseInt(yb):parseInt(ma)-parseInt(mb);
+    });
+
     buildMesSelector(meses);
 
-    // Seleccionar el mes más reciente por defecto
+    // Seleccionar el más reciente
     mesSel=meses[meses.length-1]||'';
-    renderMes(mesSel);
+    await cargarYRenderMes(mesSel);
 
     document.getElementById('loading').style.display='none';
     document.getElementById('dashboard').style.display='block';
@@ -425,25 +446,12 @@ async function init(){
     document.getElementById('loading').style.display='none';
     const el=document.getElementById('error');
     el.style.display='block';
-    el.innerHTML=`<strong>Error al cargar datos</strong><br><br>${err.message}`;
+    el.innerHTML=`<strong>Error al cargar datos</strong><br><br>${err.message}<br><br>
+    Verifica que la hoja "Altum KPIs - Atlanta" esté compartida como "Cualquier persona con el enlace puede ver".`;
   }
 }
 
-// ═══════════════════════════════════════
-// MES SELECTOR
-// ═══════════════════════════════════════
-function mesLabel(mesAno){
-  // "05/2026" → "Mayo 2026"
-  const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  const parts=String(mesAno).split('/');
-  if(parts.length===2){
-    const m=parseInt(parts[0])-1;
-    const y=parts[1];
-    return `${meses[m]||mesAno} ${y}`;
-  }
-  return mesAno;
-}
-
+// ── SELECTOR DE MES ──
 function buildMesSelector(meses){
   const el=document.getElementById('mes-selector');
   el.innerHTML='<span class="mes-selector-label">Mes:</span>';
@@ -452,51 +460,64 @@ function buildMesSelector(meses){
     btn.className='mes-btn';
     btn.textContent=mesLabel(m);
     btn.dataset.mes=m;
-    btn.onclick=()=>{
-      mesSel=m;
-      supSel='';
+    btn.onclick=async()=>{
+      mesSel=m; supSel='';
       document.querySelectorAll('.mes-btn').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       closeSupervisor();
-      renderMes(m);
+      await cargarYRenderMes(m);
     };
     el.appendChild(btn);
   });
-  // Activar el último
+  // Activar último
   const btns=el.querySelectorAll('.mes-btn');
   if(btns.length) btns[btns.length-1].classList.add('active');
 }
 
-// ═══════════════════════════════════════
-// RENDER MES
-// ═══════════════════════════════════════
-function renderMes(mes){
-  // KPIs del mes: tomar la última fila del mes
+// ── CARGAR DATOS CRUDOS DEL MES (con cache) ──
+async function getRawMes(mesAno){
+  const key=mesAnoToKey(mesAno);
+  if(!rawCache[key]){
+    console.log(`Cargando hoja: ${key}`);
+    const rows=await fetchSheetSafe(key);
+    console.log(`${key}: ${rows.length} filas`, rows[0]||'vacío');
+    rawCache[key]=rows;
+  }
+  return rawCache[key];
+}
+
+// ── CARGAR Y RENDERIZAR MES ──
+async function cargarYRenderMes(mes){
+  document.getElementById('mes-loading').style.display='block';
+  try{
+    const raw=await getRawMes(mes);
+    renderMes(mes, raw);
+  }finally{
+    document.getElementById('mes-loading').style.display='none';
+  }
+}
+
+// ── RENDER MES ──
+function renderMes(mes, raw){
+  // KPI más reciente del mes
   const kpisMes=allKpis.filter(r=>String(r.mes_año||'')===mes);
   const l=kpisMes[kpisMes.length-1];
-  if(!l)return;
+  if(!l){console.warn('Sin KPIs para mes',mes);return;}
 
-  // Raw del mes
-  const rawMes=allRaw.filter(r=>{
-    const f=String(r.Fecha||r.mes_referencia||'');
-    // mes_referencia es "YYYY-MM", mes es "MM/YYYY"
-    const parts=mes.split('/');
-    if(parts.length===2){
-      const mm=parts[0].padStart(2,'0');
-      const yy=parts[1];
-      return f.startsWith(`${yy}-${mm}`) || r.mes_referencia===`${yy}-${mm}`;
-    }
-    return false;
-  });
+  const total=num(l.total_registros_mes), meta=num(l.meta_mensual)||3000;
+  const pct=num(l.pct_cumplimiento_meta), proy=num(l.proyeccion_cierre_mes);
+  const prom=num(l.promedio_diario), sup=num(l.supervisores_activos);
+  const ptos=num(l.puestos_visitados), zonas=num(l.zonas_cubiertas);
+  const diur=num(l.turno_diurno), noct=num(l.turno_nocturno);
+  const dia=num(l.dias_transcurridos), dMes=num(l.dias_en_mes)||31;
+
+  // Mes cerrado o en curso
+  const ahora=new Date();
+  const [mm,yy]=mes.split('/');
+  const esMesActual=parseInt(yy)===ahora.getFullYear()&&parseInt(mm)===(ahora.getMonth()+1);
+  document.getElementById('sc-proy-label').textContent=esMesActual?'Proyección mes':'Total final';
 
   // Scorecards
-  const total=num(l.total_registros_mes),meta=num(l.meta_mensual)||3000;
-  const pct=num(l.pct_cumplimiento_meta),proy=num(l.proyeccion_cierre_mes);
-  const prom=num(l.promedio_diario),sup=num(l.supervisores_activos);
-  const ptos=num(l.puestos_visitados),zonas=num(l.zonas_cubiertas);
-  const diur=num(l.turno_diurno),noct=num(l.turno_nocturno);
-  const dia=num(l.dias_transcurridos),dMes=num(l.dias_en_mes)||31;
-
   document.getElementById('sc-total').textContent=fmt(total);
   document.getElementById('sc-meta').textContent=fmt(meta);
   document.getElementById('sc-pct').textContent=fmtPct(pct);
@@ -515,95 +536,90 @@ function renderMes(mes){
     document.getElementById('bar-pct').style.width=Math.min(pct,100)+'%';
     document.getElementById('bar-proy').style.width=Math.min((proy/meta)*100,100)+'%';
     document.getElementById('bar-sup').style.width=Math.min((sup/12)*100,100)+'%';
-  },300);
+  },200);
 
   // Donut
   document.getElementById('d-noc').textContent=fmt(noct);
-  document.getElementById('d-pnoc').textContent=' ('+num(l.pct_nocturno).toFixed(1)+'%)';
+  document.getElementById('d-pnoc').textContent=noct+diur>0?' ('+(noct/(noct+diur)*100).toFixed(1)+'%)':'';
   document.getElementById('d-dia').textContent=fmt(diur);
-  document.getElementById('d-pdia').textContent=' ('+num(l.pct_diurno).toFixed(1)+'%)';
+  document.getElementById('d-pdia').textContent=noct+diur>0?' ('+(diur/(noct+diur)*100).toFixed(1)+'%)':'';
   setTimeout(()=>drawDonut(diur,noct),300);
 
-  // Gráficas
-  drawDayBars(rawMes);
-  renderSupMes(rawMes, dia);
-  renderSupProm(rawMes, dia);
-
-  // Recorridos
-  const recMes=allRec.filter(r=>{
-    const parts=mes.split('/');
-    if(parts.length===2) return String(r.mes_año||'')===mes;
-    return false;
+  // Normalizar fechas en raw (pueden venir como "30/04/2026" o "2026-04-30")
+  const rawNorm=raw.map(r=>{
+    let f=String(r.Fecha||'');
+    // Si viene como "DD/MM/YYYY" convertir a "YYYY-MM-DD"
+    if(/^\d{2}\/\d{2}\/\d{4}$/.test(f)){
+      const [d,mo,yr]=f.split('/');
+      f=`${yr}-${mo}-${d}`;
+    }
+    return {...r, Fecha:f};
   });
-  const fechasRec=[...new Set(recMes.map(r=>String(r.fecha||'')))].sort();
-  const ultimaFechaRec=fechasRec[fechasRec.length-1]||'';
-  const recHoy=recMes.filter(r=>String(r.fecha||'')===ultimaFechaRec);
-  document.getElementById('rec-fecha-badge').textContent=`Entre 1h y 8h · ${ultimaFechaRec||'sin datos'}`;
-  renderRecorridos(recHoy,'all');
+
+  console.log(`Raw normalizado: ${rawNorm.length} filas. Ejemplo Fecha:`, rawNorm[0]?.Fecha);
+
+  // Gráficas
+  drawDayBars(rawNorm);
+  renderSupMes(rawNorm, dia);
+  renderSupProm(rawNorm, dia);
+
+  // Recorridos del mes
+  const recMes=allRec.filter(r=>String(r.mes_año||'')===mes);
+  const fechasRec=[...new Set(recMes.map(r=>String(r.fecha||'')).filter(Boolean))].sort();
+  const ultimaFec=fechasRec[fechasRec.length-1]||'';
+  const recHoy=recMes.filter(r=>String(r.fecha||'')===ultimaFec);
+  document.getElementById('rec-fecha-badge').textContent=`Entre 1h y 8h · ${ultimaFec||'sin datos'}`;
   buildRecTabs(recHoy);
+  renderRecorridos(recHoy,'all');
 }
 
-// ═══════════════════════════════════════
-// BARRAS POR DÍA
-// ═══════════════════════════════════════
+// ── BARRAS POR DÍA ──
 function drawDayBars(rawRows){
   const byDay={};
   rawRows.forEach(r=>{
     const f=String(r.Fecha||'').slice(0,10);
-    if(f&&f!=='nan'&&f.length===10)byDay[f]=(byDay[f]||0)+1;
+    if(f&&f.length===10&&f!=='nan')byDay[f]=(byDay[f]||0)+1;
   });
   const days=Object.keys(byDay).sort();
   const el=document.getElementById('daybars-wrap');
-  if(!days.length){el.innerHTML='<div class="no-data">Sin datos</div>';return;}
+  if(!days.length){el.innerHTML='<div class="no-data">Sin datos de fechas</div>';return;}
   const maxV=Math.max(...Object.values(byDay));
-  let html='<div class="daybars">';
-  days.forEach(d=>{
-    const v=byDay[d];
-    const pct=maxV>0?(v/maxV*100):0;
-    const dia=d.slice(8,10);
-    const color=v===maxV?'#10b981':'#3b82f6';
-    html+=`<div class="daybar-wrap" title="${d}: ${v} revistas">
+  el.innerHTML='<div class="daybars">'+days.map(d=>{
+    const v=byDay[d],pct=maxV>0?(v/maxV*100):0,dia=d.slice(8,10);
+    return `<div class="daybar-wrap" title="${d}: ${v}">
       <div class="daybar-count">${v}</div>
-      <div class="daybar" style="height:${Math.max(pct,2)}%;background:${color}"></div>
+      <div class="daybar" style="height:${Math.max(pct,2)}%;background:${v===maxV?'#10b981':'#3b82f6'}"></div>
       <div class="daybar-day">${dia}</div>
     </div>`;
-  });
-  html+='</div>';
-  el.innerHTML=html;
+  }).join('')+'</div>';
 }
 
-// ═══════════════════════════════════════
-// DONUT
-// ═══════════════════════════════════════
+// ── DONUT ──
 function drawDonut(diurno,nocturno){
   const total=diurno+nocturno;
   if(!total)return;
-  const circ=2*Math.PI*38;
-  const pN=nocturno/total,pD=diurno/total;
+  const circ=2*Math.PI*38,pN=nocturno/total,pD=diurno/total;
   document.getElementById('donut-noc').style.strokeDashoffset=circ*(1-pN);
   document.getElementById('donut-dia').setAttribute('transform',`rotate(${-90+pN*360} 50 50)`);
   document.getElementById('donut-dia').style.strokeDashoffset=circ*(1-pD);
   document.getElementById('donut-tot').textContent=fmt(total);
 }
 
-// ═══════════════════════════════════════
-// TABLAS SUPERVISORES
-// ═══════════════════════════════════════
+// ── TABLAS SUPERVISORES ──
 function renderSupMes(rawRows, dias){
   const counts={};
   rawRows.forEach(r=>{const u=String(r.Usuario||'').trim();if(u&&u!=='nan')counts[u]=(counts[u]||0)+1;});
   const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
-  const maxV=sorted.length>0?sorted[0][1]:1;
+  const maxV=sorted.length?sorted[0][1]:1;
   document.getElementById('sup-mes-body').innerHTML=sorted.map(([u,c],i)=>{
-    const pct=(c/maxV*100).toFixed(0);
     const short=u.split(' ').slice(-2).join(' ');
-    return `<tr class="clickable" onclick="selectSupervisor('${u.replace(/'/g,"\\'")}')">
+    return `<tr class="clickable" onclick="selectSupervisor('${u.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
       <td><span class="rank-badge" style="background:${SUP_COLORS[i%10]}22;color:${SUP_COLORS[i%10]}">${i+1}</span></td>
       <td><span class="sup-name" title="${u}">${short}</span></td>
       <td><span style="font-family:var(--mono);font-weight:500">${fmt(c)}</span></td>
-      <td><div class="sup-bar-wrap"><div class="sup-bar-track"><div class="sup-bar-fill" style="width:${pct}%;background:${SUP_COLORS[i%10]}"></div></div></div></td>
+      <td><div class="sup-bar-wrap"><div class="sup-bar-track"><div class="sup-bar-fill" style="width:${(c/maxV*100).toFixed(0)}%;background:${SUP_COLORS[i%10]}"></div></div></div></td>
     </tr>`;
-  }).join('');
+  }).join('') || '<tr><td colspan="4" class="no-data">Sin datos</td></tr>';
 }
 
 function renderSupProm(rawRows, diasTranscurridos){
@@ -611,44 +627,37 @@ function renderSupProm(rawRows, diasTranscurridos){
   rawRows.forEach(r=>{const u=String(r.Usuario||'').trim();if(u&&u!=='nan')counts[u]=(counts[u]||0)+1;});
   const dias=Math.max(diasTranscurridos,1);
   const proms=Object.entries(counts).map(([u,c])=>([u,c/dias])).sort((a,b)=>b[1]-a[1]);
-  const maxP=proms.length>0?proms[0][1]:1;
+  const maxP=proms.length?proms[0][1]:1;
   document.getElementById('sup-prom-body').innerHTML=proms.map(([u,p],i)=>{
-    const pct=(p/maxP*100).toFixed(0);
     const short=u.split(' ').slice(-2).join(' ');
-    return `<tr class="clickable" onclick="selectSupervisor('${u.replace(/'/g,"\\'")}')">
+    return `<tr class="clickable" onclick="selectSupervisor('${u.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
       <td><span class="rank-badge" style="background:${SUP_COLORS[i%10]}22;color:${SUP_COLORS[i%10]}">${i+1}</span></td>
       <td><span class="sup-name" title="${u}">${short}</span></td>
       <td><span style="font-family:var(--mono);font-weight:500">${p.toFixed(1)}</span></td>
-      <td><div class="sup-bar-wrap"><div class="sup-bar-track"><div class="sup-bar-fill" style="width:${pct}%;background:${SUP_COLORS[i%10]}"></div></div></div></td>
+      <td><div class="sup-bar-wrap"><div class="sup-bar-track"><div class="sup-bar-fill" style="width:${(p/maxP*100).toFixed(0)}%;background:${SUP_COLORS[i%10]}"></div></div></div></td>
     </tr>`;
-  }).join('');
+  }).join('') || '<tr><td colspan="4" class="no-data">Sin datos</td></tr>';
 }
 
-// ═══════════════════════════════════════
-// DETALLE SUPERVISOR
-// ═══════════════════════════════════════
+// ── DETALLE SUPERVISOR ──
 function selectSupervisor(sup){
   supSel=sup;
+  const raw=rawCache[mesAnoToKey(mesSel)]||[];
 
-  // Filtrar raw del mes seleccionado para este supervisor
-  const parts=mesSel.split('/');
-  const mm=parts[0]?.padStart(2,'0'), yy=parts[1];
-  const rawMes=allRaw.filter(r=>{
-    const f=String(r.Fecha||'');
-    return (f.startsWith(`${yy}-${mm}`) || r.mes_referencia===`${yy}-${mm}`) &&
-           String(r.Usuario||'').trim()===sup;
-  });
+  // Normalizar fechas igual que en renderMes
+  const rawSup=raw.map(r=>{
+    let f=String(r.Fecha||'');
+    if(/^\d{2}\/\d{2}\/\d{4}$/.test(f)){const[d,mo,yr]=f.split('/');f=`${yr}-${mo}-${d}`;}
+    return {...r,Fecha:f};
+  }).filter(r=>String(r.Usuario||'').trim()===sup);
 
-  // Recorridos del mes para este supervisor
-  const recSup=allRec.filter(r=>String(r.mes_año||'')===mesSel && String(r.supervisor||'')===sup);
-
-  // KPIs del supervisor
-  const total=rawMes.length;
-  const kpisM=allKpis.filter(r=>String(r.mes_año||'')===mesSel);
-  const dias=num(kpisM[kpisM.length-1]?.dias_transcurridos)||1;
+  const recSup=allRec.filter(r=>String(r.mes_año||'')===mesSel&&String(r.supervisor||'')===sup);
+  const kpisMes=allKpis.filter(r=>String(r.mes_año||'')===mesSel);
+  const dias=num(kpisMes[kpisMes.length-1]?.dias_transcurridos)||1;
+  const total=rawSup.length;
   const prom=(total/dias).toFixed(1);
-  const puestos=new Set(rawMes.map(r=>r['CLIENTE VISITADO']||'')).size;
-  const zonas=new Set(rawMes.map(r=>r.ZONA||'')).size;
+  const puestos=new Set(rawSup.map(r=>r['CLIENTE VISITADO']||'')).size;
+  const zonas=new Set(rawSup.map(r=>r.ZONA||'')).size;
 
   document.getElementById('detail-name').textContent=sup;
   document.getElementById('detail-sub').textContent=`${mesLabel(mesSel)} · ${total} revistas`;
@@ -657,72 +666,52 @@ function selectSupervisor(sup){
   document.getElementById('d-puestos').textContent=puestos;
   document.getElementById('d-zonas').textContent=zonas;
 
-  // Tab visitas
-  const sorted=[...rawMes].sort((a,b)=>String(a.Fecha||'').localeCompare(String(b.Fecha||'')));
-  document.getElementById('detail-visitas').innerHTML=`
-    <div style="max-height:300px;overflow-y:auto">
-    <table class="visit-table">
-      <thead><tr><th>Fecha</th><th>Hora</th><th>Cliente visitado</th><th>Zona</th><th>Turno</th></tr></thead>
-      <tbody>${sorted.map(r=>`<tr>
-        <td style="font-family:var(--mono)">${String(r.Fecha||'').slice(0,10)}</td>
-        <td style="font-family:var(--mono)">${String(r.Hora||'').slice(0,8)}</td>
-        <td title="${r['CLIENTE VISITADO']||''}">${String(r['CLIENTE VISITADO']||'').slice(0,35)}</td>
-        <td>${r.ZONA||''}</td>
-        <td>${r['Turno:']||''}</td>
-      </tr>`).join('')}</tbody>
-    </table></div>`;
+  // Visitas
+  const sorted=[...rawSup].sort((a,b)=>String(a.Fecha||'').localeCompare(String(b.Fecha||'')));
+  document.getElementById('detail-visitas').innerHTML=`<div style="max-height:300px;overflow-y:auto">
+    <table class="visit-table"><thead><tr><th>Fecha</th><th>Hora</th><th>Cliente visitado</th><th>Zona</th><th>Turno</th></tr></thead>
+    <tbody>${sorted.map(r=>`<tr>
+      <td style="font-family:var(--mono)">${String(r.Fecha||'').slice(0,10)}</td>
+      <td style="font-family:var(--mono)">${String(r.Hora||'').slice(0,8)}</td>
+      <td title="${r['CLIENTE VISITADO']||''}">${String(r['CLIENTE VISITADO']||'').slice(0,35)}</td>
+      <td>${r.ZONA||''}</td>
+      <td>${r['Turno:']||''}</td>
+    </tr>`).join('')}</tbody></table></div>`;
 
-  // Tab recorridos
-  if(recSup.length){
-    document.getElementById('detail-recorridos').innerHTML=`
-      <div style="max-height:300px;overflow-y:auto">
-      <table class="rec-table">
-        <thead><tr><th>Fecha</th><th>Desde</th><th>Hasta</th><th>Cliente A</th><th>Cliente B</th><th>Tiempo</th><th>Alerta</th></tr></thead>
-        <tbody>${recSup.map(r=>{
-          const isWarn=num(r.horas)>=4;
-          return `<tr>
-            <td style="font-family:var(--mono)">${r.fecha||''}</td>
-            <td style="font-family:var(--mono)">${r.hora_desde||''}</td>
-            <td style="font-family:var(--mono)">${r.hora_hasta||''}</td>
-            <td><span class="cliente-name" title="${r.cliente_desde||''}">${r.cliente_desde||''}</span></td>
-            <td><span class="cliente-name" title="${r.cliente_hasta||''}">${r.cliente_hasta||''}</span></td>
-            <td><span class="time-badge ${isWarn?'time-warn':'time-ok'}">${r.horas_formato||''}</span></td>
-            <td>${r.alerta||''}</td>
-          </tr>`;
-        }).join('')}</tbody>
-      </table></div>`;
-  } else {
-    document.getElementById('detail-recorridos').innerHTML='<div class="no-data">Sin intervalos de recorrido registrados para este supervisor en este mes.</div>';
-  }
+  // Recorridos del supervisor
+  document.getElementById('detail-recorridos').innerHTML=recSup.length?
+    `<div style="max-height:300px;overflow-y:auto"><table class="rec-table">
+      <thead><tr><th>Fecha</th><th>Desde</th><th>Hasta</th><th>Cliente A</th><th>Cliente B</th><th>Tiempo</th></tr></thead>
+      <tbody>${recSup.map(r=>`<tr>
+        <td style="font-family:var(--mono)">${r.fecha||''}</td>
+        <td style="font-family:var(--mono)">${r.hora_desde||''}</td>
+        <td style="font-family:var(--mono)">${r.hora_hasta||''}</td>
+        <td><span class="cliente-name" title="${r.cliente_desde||''}">${r.cliente_desde||''}</span></td>
+        <td><span class="cliente-name" title="${r.cliente_hasta||''}">${r.cliente_hasta||''}</span></td>
+        <td><span class="time-badge ${num(r.horas)>=4?'time-warn':'time-ok'}">${r.horas_formato||''}</span></td>
+      </tr>`).join('')}</tbody></table></div>`:
+    '<div class="no-data">Sin intervalos de recorrido para este supervisor en este mes.</div>';
 
-  // Tab top puestos
-  const puestoCounts={};
-  rawMes.forEach(r=>{const p=String(r['CLIENTE VISITADO']||'').trim();if(p)puestoCounts[p]=(puestoCounts[p]||0)+1;});
-  const topPuestos=Object.entries(puestoCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
-  const maxP=topPuestos.length?topPuestos[0][1]:1;
-  document.getElementById('detail-puestos').innerHTML=`
-    <div style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto">
-    ${topPuestos.map(([p,c],i)=>`
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:11px;color:var(--muted);width:16px;text-align:right">${i+1}</span>
-        <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${p}">${p}</span>
-        <div style="width:120px;height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden">
-          <div style="height:100%;width:${(c/maxP*100).toFixed(0)}%;background:${SUP_COLORS[i%10]};border-radius:3px"></div>
-        </div>
-        <span style="font-family:var(--mono);font-size:12px;color:var(--muted);width:24px;text-align:right">${c}</span>
-      </div>`).join('')}
-    </div>`;
+  // Top puestos
+  const pc={};rawSup.forEach(r=>{const p=String(r['CLIENTE VISITADO']||'').trim();if(p)pc[p]=(pc[p]||0)+1;});
+  const top=Object.entries(pc).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  const maxP=top.length?top[0][1]:1;
+  document.getElementById('detail-puestos').innerHTML=`<div style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto">
+    ${top.map(([p,c],i)=>`<div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:11px;color:var(--muted);width:16px;text-align:right">${i+1}</span>
+      <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${p}">${p}</span>
+      <div style="width:100px;height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${(c/maxP*100).toFixed(0)}%;background:${SUP_COLORS[i%10]};border-radius:3px"></div>
+      </div>
+      <span style="font-family:var(--mono);font-size:12px;color:var(--muted);width:24px;text-align:right">${c}</span>
+    </div>`).join('')}</div>`;
 
-  // Mostrar panel
   const panel=document.getElementById('sup-detail');
   panel.style.display='block';
   panel.scrollIntoView({behavior:'smooth',block:'nearest'});
-
-  // Marcar fila seleccionada
   document.querySelectorAll('.sup-table tr.clickable').forEach(tr=>{
-    tr.classList.toggle('selected', tr.querySelector('.sup-name')?.title===sup);
+    tr.classList.toggle('selected',tr.querySelector('.sup-name')?.title===sup);
   });
-
   switchDetailTab('visitas');
 }
 
@@ -734,65 +723,45 @@ function closeSupervisor(){
 
 function switchDetailTab(tab){
   document.querySelectorAll('.detail-tab').forEach((t,i)=>{
-    const tabs=['visitas','recorridos','puestos'];
-    t.classList.toggle('active',tabs[i]===tab);
+    t.classList.toggle('active',['visitas','recorridos','puestos'][i]===tab);
   });
   document.querySelectorAll('.detail-content').forEach(c=>c.classList.remove('active'));
   document.getElementById('detail-'+tab).classList.add('active');
 }
 
-// ═══════════════════════════════════════
-// RECORRIDOS GENERALES
-// ═══════════════════════════════════════
+// ── RECORRIDOS GENERALES ──
 let recorridosData=[];
-
 function buildRecTabs(data){
-  const sups=[...new Set(data.map(r=>String(r.supervisor||r.sup||'')))].filter(Boolean).sort();
+  const sups=[...new Set(data.map(r=>String(r.supervisor||'')))].filter(Boolean).sort();
   document.getElementById('sup-tabs').innerHTML=sups.map(s=>{
     const short=s.split(' ').slice(-2).join(' ');
-    return `<button class="tab" data-sup="${s}" onclick="switchTab('${s}')">${short}</button>`;
+    return `<button class="tab" data-sup="${s}" onclick="switchTab('${s.replace(/'/g,"\\'")}')">${short}</button>`;
   }).join('');
   recorridosData=data;
-  switchTab('all');
 }
-
 function switchTab(sup){
-  document.querySelectorAll('.tab').forEach(t=>{
-    t.classList.toggle('active',(sup==='all'&&t.dataset.sup==='all')||(t.dataset.sup===sup));
-  });
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',(sup==='all'&&t.dataset.sup==='all')||(t.dataset.sup===sup)));
   renderRecorridos(recorridosData,sup);
 }
-
 function renderRecorridos(data,supFiltro){
-  const rows=supFiltro==='all'?data:data.filter(r=>String(r.supervisor||r.sup||'')===supFiltro);
+  const rows=supFiltro==='all'?data:data.filter(r=>String(r.supervisor||'')===supFiltro);
   const el=document.getElementById('recorridos-content');
-  if(!rows.length){el.innerHTML='<div class="no-data">No hay intervalos entre 1h y 8h para este período.</div>';return;}
-  el.innerHTML=`<div style="overflow-x:auto"><table class="rec-table">
-    <thead><tr><th>Supervisor</th><th>Desde</th><th>Hasta</th><th>Cliente A</th><th>Cliente B</th><th>Tiempo</th></tr></thead>
-    <tbody>${rows.map(r=>{
-      const supN=String(r.supervisor||r.sup||'').split(' ').slice(-2).join(' ');
-      const isWarn=num(r.horas||r.horas)>=4;
-      const tiempo=r.horas_formato||fmtHoras(num(r.minutos));
-      return `<tr>
-        <td><span class="sup-name">${supN}</span></td>
-        <td style="font-family:var(--mono);font-size:12px">${r.hora_desde||r.desde||''}</td>
-        <td style="font-family:var(--mono);font-size:12px">${r.hora_hasta||r.hasta||''}</td>
-        <td><span class="cliente-name" title="${r.cliente_desde||r.clienteA||''}">${r.cliente_desde||r.clienteA||''}</span></td>
-        <td><span class="cliente-name" title="${r.cliente_hasta||r.clienteB||''}">${r.cliente_hasta||r.clienteB||''}</span></td>
-        <td><span class="time-badge ${isWarn?'time-warn':'time-ok'}">${tiempo}</span></td>
-      </tr>`;
-    }).join('')}</tbody>
-  </table></div>`;
+  if(!rows.length){el.innerHTML='<div class="no-data">Sin intervalos entre 1h y 8h.</div>';return;}
+  el.innerHTML=`<div style="overflow-x:auto"><table class="rec-table"><thead><tr>
+    <th>Supervisor</th><th>Desde</th><th>Hasta</th><th>Cliente A</th><th>Cliente B</th><th>Tiempo</th>
+  </tr></thead><tbody>${rows.map(r=>{
+    const short=String(r.supervisor||'').split(' ').slice(-2).join(' ');
+    return `<tr>
+      <td><span class="sup-name">${short}</span></td>
+      <td style="font-family:var(--mono);font-size:12px">${r.hora_desde||''}</td>
+      <td style="font-family:var(--mono);font-size:12px">${r.hora_hasta||''}</td>
+      <td><span class="cliente-name" title="${r.cliente_desde||''}">${r.cliente_desde||''}</span></td>
+      <td><span class="cliente-name" title="${r.cliente_hasta||''}">${r.cliente_hasta||''}</span></td>
+      <td><span class="time-badge ${num(r.horas)>=4?'time-warn':'time-ok'}">${r.horas_formato||''}</span></td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
 }
 
-function fmtHoras(min){
-  const h=Math.floor(min/60),m=min%60;
-  return h>0?`${h}h ${m}m`:`${m}m`;
-}
-
-// ═══════════════════════════════════════
-// START
-// ═══════════════════════════════════════
 if(sessionStorage.getItem(SK)==='1') init();
 </script>
 </body>
