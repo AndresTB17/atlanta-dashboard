@@ -548,6 +548,35 @@ const fmt=n=>(n===''||n==null)?'—':Number(n).toLocaleString('es-CO');
 const fmtPct=n=>(n===''||n==null)?'—':Number(n).toFixed(1)+'%';
 const num=n=>Number(n)||0;
 
+// ── Normalizar cualquier formato de fecha a "YYYY-MM-DD" ──
+function toISODate(raw){
+  const s=String(raw||'').trim();
+  if(!s||s==='nan')return '';
+
+  // Formato gviz: Date(2026,6,4)  → mes viene 0-indexado
+  let m=s.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})\)/);
+  if(m){
+    const [,y,mo,d]=m;
+    return `${y}-${String(parseInt(mo)+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  }
+
+  // Formato DD/MM/YYYY
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m){
+    const [,d,mo,y]=m;
+    return `${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+
+  // Ya viene como YYYY-MM-DD (con o sin hora)
+  m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m){
+    const [,y,mo,d]=m;
+    return `${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+
+  return s.slice(0,10);
+}
+
 // ── Convertir "MM/YYYY" a sheet key "datos_YYYY_MM" ──
 function mesAnoToKey(mesAno){
   const [mm,yy]=String(mesAno).split('/');
@@ -1113,7 +1142,7 @@ function renderNovMes(mes, raw){
 }
 
 function renderNovClienteTabla(raw){
-  const rows=[...raw].sort((a,b)=>String(b.Fecha||'').localeCompare(String(a.Fecha||''))+String(b.Hora||'').localeCompare(String(a.Hora||'')));
+  const rows=[...raw].sort((a,b)=>toISODate(b.Fecha).localeCompare(toISODate(a.Fecha))||String(b.Hora||'').localeCompare(String(a.Hora||'')));
   const el=document.getElementById('nov-cliente-tabla');
   if(!rows.length){el.innerHTML='<div class="no-data">Sin reportes este mes</div>';return;}
   el.innerHTML=`<div style="max-height:360px;overflow-y:auto"><table class="rec-table">
@@ -1124,7 +1153,7 @@ function renderNovClienteTabla(raw){
       const cat=r['ACCIÓN REPORTADA']||r['MOTIVO DE LA REACCIÓN']||'—';
       const sup=String(r.Usuario||'').split(' ').slice(-2).join(' ');
       return `<tr>
-        <td style="font-family:var(--mono);font-size:12px">${String(r.Fecha||'').slice(0,10)}</td>
+        <td style="font-family:var(--mono);font-size:12px">${toISODate(r.Fecha)}</td>
         <td><span class="cliente-name" title="${r['NOMBRE DEL CLIENTE']||''}">${r['NOMBRE DEL CLIENTE']||'—'}</span></td>
         <td>${cat}</td>
         <td><span class="nov-tipo-badge ${esNovedad?'nov-tipo-novedad':'nov-tipo-reaccion'}">${tipo||'—'}</span></td>
@@ -1147,7 +1176,7 @@ function selectNovSupervisor(sup){
   novSupSel=sup;
   const raw=novRawCache[novMesAnoToKey(novMesSel)]||[];
   const reportes=raw.filter(r=>String(r.Usuario||'').trim()===sup)
-    .sort((a,b)=>String(b.Fecha||'').localeCompare(String(a.Fecha||'')));
+    .sort((a,b)=>toISODate(b.Fecha).localeCompare(toISODate(a.Fecha)));
 
   document.getElementById('ndetail-name').textContent=sup;
   document.getElementById('ndetail-sub').textContent=`${mesLabel(novMesSel)} · ${reportes.length} reportes`;
@@ -1161,7 +1190,7 @@ function selectNovSupervisor(sup){
       return `<div class="nov-report">
         <div class="nov-report-head">
           <span class="nov-tipo-badge ${esNovedad?'nov-tipo-novedad':'nov-tipo-reaccion'}">${tipo||'—'}</span>
-          <span class="nov-report-meta">${String(r.Fecha||'').slice(0,10)} · ${String(r.Hora||'').slice(0,8)}</span>
+          <span class="nov-report-meta">${toISODate(r.Fecha)} · ${String(r.Hora||'').slice(0,8)}</span>
         </div>
         <div class="nov-report-meta" style="margin-bottom:6px">
           <strong style="color:var(--text)">${cat}</strong> · ${r['NOMBRE DEL CLIENTE']||'—'}
