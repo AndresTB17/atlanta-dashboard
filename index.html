@@ -299,6 +299,18 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       </div>
     </div>
 
+    <!-- FILA 2.5: Clientes con más/menos revistas -->
+    <div class="row-2">
+      <div class="card">
+        <div class="card-title">Top 15 clientes con más revistas <span class="card-badge">Sin Central Atlanta</span></div>
+        <div id="clientes-top"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Top 10 clientes con menos revistas <span class="card-badge">Sin Central Atlanta</span></div>
+        <div id="clientes-bottom"></div>
+      </div>
+    </div>
+
     <!-- PANEL DETALLE SUPERVISOR -->
     <div id="sup-detail">
       <div class="sup-detail-header">
@@ -430,6 +442,14 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
           <tbody id="nov-sup-body"></tbody>
         </table>
         <div class="click-hint">👆 Haz clic en un supervisor para ver el detalle de sus reportes</div>
+      </div>
+    </div>
+
+    <!-- FILA 3: Cliente y novedad -->
+    <div class="row-full">
+      <div class="card">
+        <div class="card-title">Cliente y novedad — mes completo</div>
+        <div id="nov-cliente-tabla"></div>
       </div>
     </div>
 
@@ -690,6 +710,7 @@ function renderMes(mes, raw){
   drawDayBars(rawNorm);
   renderSupMes(rawNorm, dia);
   renderSupProm(rawNorm, dia);
+  renderClientesRevistas(rawNorm);
 
   // Recorridos del mes
   const recMes=allRec.filter(r=>String(r.mes_año||'')===mes);
@@ -720,6 +741,39 @@ function drawDayBars(rawRows){
       <div class="daybar-day">${dia}</div>
     </div>`;
   }).join('')+'</div>';
+}
+
+function renderClientesRevistas(rawRows){
+  const counts={};
+  rawRows.forEach(r=>{
+    const c=String(r['CLIENTE VISITADO']||'').trim();
+    if(!c||c==='nan')return;
+    // Descartar cualquier variante de "Central Atlanta" (espacios/mayúsculas distintas)
+    const norm=c.toUpperCase().replace(/\s+/g,' ');
+    if(norm.includes('CENTRAL ATLANTA'))return;
+    counts[c]=(counts[c]||0)+1;
+  });
+  const entries=Object.entries(counts);
+  const top15=[...entries].sort((a,b)=>b[1]-a[1]).slice(0,15);
+  const bottom10=[...entries].sort((a,b)=>a[1]-b[1]).slice(0,10);
+
+  const renderList=(list)=>{
+    if(!list.length)return '<div class="no-data">Sin datos</div>';
+    const maxV=Math.max(...list.map(([,c])=>c));
+    return `<div style="display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto">
+      ${list.map(([p,c],i)=>`<div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:11px;color:var(--muted);width:16px;text-align:right">${i+1}</span>
+        <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${p}">${p}</span>
+        <div style="width:100px;height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${(c/maxV*100).toFixed(0)}%;background:${SUP_COLORS[i%10]};border-radius:3px"></div>
+        </div>
+        <span style="font-family:var(--mono);font-size:12px;color:var(--muted);width:24px;text-align:right">${c}</span>
+      </div>`).join('')}
+    </div>`;
+  };
+
+  document.getElementById('clientes-top').innerHTML=renderList(top15);
+  document.getElementById('clientes-bottom').innerHTML=renderList(bottom10);
 }
 
 // ── DONUT ──
@@ -1036,6 +1090,8 @@ function renderNovMes(mes, raw){
       <span style="font-family:var(--mono);font-size:12px;color:var(--muted);width:20px;text-align:right">${c}</span>
     </div>`).join('') : '<div class="no-data">Sin categorías registradas</div>';
 
+  renderNovClienteTabla(raw);
+
   // Tabla por supervisor (usa resumen_supervisor_reacciones, filtrado por mes)
   const resumenMes=allResumenNov.filter(r=>String(r.mes_año||'')===mes)
     .sort((a,b)=>num(b.total_reportes)-num(a.total_reportes));
@@ -1054,6 +1110,27 @@ function renderNovMes(mes, raw){
         <td><div class="sup-bar-wrap"><div class="sup-bar-track"><div class="sup-bar-fill" style="width:${(t/maxTot*100).toFixed(0)}%;background:${SUP_COLORS[i%10]}"></div></div></div></td>
       </tr>`;
     }).join('') : '<tr><td colspan="6" class="no-data">Sin reportes este mes</td></tr>';
+}
+
+function renderNovClienteTabla(raw){
+  const rows=[...raw].sort((a,b)=>String(b.Fecha||'').localeCompare(String(a.Fecha||''))+String(b.Hora||'').localeCompare(String(a.Hora||'')));
+  const el=document.getElementById('nov-cliente-tabla');
+  if(!rows.length){el.innerHTML='<div class="no-data">Sin reportes este mes</div>';return;}
+  el.innerHTML=`<div style="max-height:360px;overflow-y:auto"><table class="rec-table">
+    <thead><tr><th>Fecha</th><th>Cliente</th><th>Novedad</th><th>Tipo</th><th>Supervisor</th></tr></thead>
+    <tbody>${rows.map(r=>{
+      const tipo=String(r['TIPO DE REPORTE']||'').trim().toUpperCase();
+      const esNovedad=tipo==='NOVEDAD';
+      const cat=r['ACCIÓN REPORTADA']||r['MOTIVO DE LA REACCIÓN']||'—';
+      const sup=String(r.Usuario||'').split(' ').slice(-2).join(' ');
+      return `<tr>
+        <td style="font-family:var(--mono);font-size:12px">${String(r.Fecha||'').slice(0,10)}</td>
+        <td><span class="cliente-name" title="${r['NOMBRE DEL CLIENTE']||''}">${r['NOMBRE DEL CLIENTE']||'—'}</span></td>
+        <td>${cat}</td>
+        <td><span class="nov-tipo-badge ${esNovedad?'nov-tipo-novedad':'nov-tipo-reaccion'}">${tipo||'—'}</span></td>
+        <td><span class="sup-name" title="${r.Usuario||''}">${sup}</span></td>
+      </tr>`;
+    }).join('')}</tbody></table></div>`;
 }
 
 function drawNovDonut(novedades,reacciones){
