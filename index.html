@@ -207,6 +207,11 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   </div>
 
 <div id="view-revistas">
+  <!-- SELECTOR DE AÑO -->
+  <div class="mes-selector" id="year-selector">
+    <span class="mes-selector-label">Año:</span>
+  </div>
+
   <!-- SELECTOR DE MES -->
   <div class="mes-selector" id="mes-selector">
     <span class="mes-selector-label">Mes:</span>
@@ -360,6 +365,11 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 </div><!-- /view-revistas -->
 
 <div id="view-novedades" style="display:none">
+  <!-- SELECTOR DE AÑO (NOVEDADES) -->
+  <div class="mes-selector" id="year-selector-nov">
+    <span class="mes-selector-label">Año:</span>
+  </div>
+
   <!-- SELECTOR DE MES (NOVEDADES) -->
   <div class="mes-selector" id="mes-selector-nov">
     <span class="mes-selector-label">Mes:</span>
@@ -605,10 +615,18 @@ async function init(){
       return ya!==yb?parseInt(ya)-parseInt(yb):parseInt(ma)-parseInt(mb);
     });
 
-    buildMesSelector(meses);
+    const defaultMes=buildYearMonthSelector(meses, {
+      yearContainerId:'year-selector',
+      monthContainerId:'mes-selector',
+      onSelectMonth: async(m)=>{
+        mesSel=m; supSel='';
+        closeSupervisor();
+        await cargarYRenderMes(m);
+      }
+    });
 
     // Seleccionar el más reciente
-    mesSel=meses[meses.length-1]||'';
+    mesSel=defaultMes;
     await cargarYRenderMes(mesSel);
 
     document.getElementById('loading').style.display='none';
@@ -628,27 +646,55 @@ async function init(){
   }
 }
 
-// ── SELECTOR DE MES ──
-function buildMesSelector(meses){
-  const el=document.getElementById('mes-selector');
-  el.innerHTML='<span class="mes-selector-label">Mes:</span>';
-  meses.forEach(m=>{
+// ── SELECTOR AÑO → MES (genérico, usado en ambas vistas) ──
+// meses: array de strings "MM/YYYY". Construye pills de año, y dentro de cada
+// año, pills solo con los meses de ese año. Devuelve el mes por defecto
+// (el más reciente) sin disparar la carga — el llamador decide cuándo cargarlo.
+function buildYearMonthSelector(meses, {yearContainerId, monthContainerId, onSelectMonth}){
+  const years=[...new Set(meses.map(m=>m.split('/')[1]))].sort((a,b)=>parseInt(a)-parseInt(b));
+  const yearEl=document.getElementById(yearContainerId);
+  yearEl.innerHTML='<span class="mes-selector-label">Año:</span>';
+  const defaultYear=years[years.length-1];
+
+  const mesesDelAnio=(y)=>meses.filter(m=>m.split('/')[1]===y).sort((a,b)=>parseInt(a)-parseInt(b));
+
+  function renderMonths(year, autoTrigger){
+    const monthEl=document.getElementById(monthContainerId);
+    monthEl.innerHTML='<span class="mes-selector-label">Mes:</span>';
+    const lista=mesesDelAnio(year);
+    lista.forEach(m=>{
+      const btn=document.createElement('button');
+      btn.className='mes-btn';
+      btn.textContent=MESES_ES[parseInt(m.split('/')[0])]||m;
+      btn.dataset.mes=m;
+      btn.onclick=()=>{
+        monthEl.querySelectorAll('.mes-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        onSelectMonth(m);
+      };
+      monthEl.appendChild(btn);
+    });
+    const btns=monthEl.querySelectorAll('.mes-btn');
+    const defaultMonth=lista[lista.length-1]||'';
+    if(btns.length) btns[btns.length-1].classList.add('active');
+    if(autoTrigger && defaultMonth) onSelectMonth(defaultMonth);
+    return defaultMonth;
+  }
+
+  years.forEach(y=>{
     const btn=document.createElement('button');
-    btn.className='mes-btn';
-    btn.textContent=mesLabel(m);
-    btn.dataset.mes=m;
-    btn.onclick=async()=>{
-      mesSel=m; supSel='';
-      document.querySelectorAll('.mes-btn').forEach(b=>b.classList.remove('active'));
+    btn.className='mes-btn'+(y===defaultYear?' active':'');
+    btn.textContent=y;
+    btn.dataset.year=y;
+    btn.onclick=()=>{
+      yearEl.querySelectorAll('.mes-btn').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
-      closeSupervisor();
-      await cargarYRenderMes(m);
+      renderMonths(y, true);
     };
-    el.appendChild(btn);
+    yearEl.appendChild(btn);
   });
-  // Activar último
-  const btns=el.querySelectorAll('.mes-btn');
-  if(btns.length) btns[btns.length-1].classList.add('active');
+
+  return renderMonths(defaultYear, false);
 }
 
 // ── CARGAR DATOS CRUDOS DEL MES (con cache) ──
@@ -1020,8 +1066,17 @@ async function initNovedades(){
       return ya!==yb?parseInt(ya)-parseInt(yb):parseInt(ma)-parseInt(mb);
     });
 
-    buildMesSelectorNov(meses);
-    novMesSel=meses[meses.length-1]||'';
+    const defaultMesNov=buildYearMonthSelector(meses, {
+      yearContainerId:'year-selector-nov',
+      monthContainerId:'mes-selector-nov',
+      onSelectMonth: async(m)=>{
+        novMesSel=m; novSupSel='';
+        closeNovSupervisor();
+        await cargarYRenderNovMes(m);
+      }
+    });
+
+    novMesSel=defaultMesNov;
     await cargarYRenderNovMes(novMesSel);
 
     document.getElementById('loading-nov').style.display='none';
@@ -1034,27 +1089,6 @@ async function initNovedades(){
     Verifica que REACCIONES_SHEET_ID esté puesto correctamente en el código, y que la hoja
     "Altum Reacciones - Atlanta" esté compartida como "Cualquier persona con el enlace puede ver".`;
   }
-}
-
-function buildMesSelectorNov(meses){
-  const el=document.getElementById('mes-selector-nov');
-  el.innerHTML='<span class="mes-selector-label">Mes:</span>';
-  meses.forEach(m=>{
-    const btn=document.createElement('button');
-    btn.className='mes-btn';
-    btn.textContent=mesLabel(m);
-    btn.dataset.mes=m;
-    btn.onclick=async()=>{
-      novMesSel=m; novSupSel='';
-      document.querySelectorAll('#mes-selector-nov .mes-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      closeNovSupervisor();
-      await cargarYRenderNovMes(m);
-    };
-    el.appendChild(btn);
-  });
-  const btns=el.querySelectorAll('.mes-btn');
-  if(btns.length) btns[btns.length-1].classList.add('active');
 }
 
 async function getNovRawMes(mesAno){
