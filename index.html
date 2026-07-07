@@ -120,6 +120,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .sup-kpi-val{font-size:22px;font-weight:600;font-family:var(--mono);letter-spacing:-0.5px}
 .sup-kpi-label{font-size:11px;color:var(--muted);margin-top:3px}
 #nov-detail{display:none;background:var(--surface2);border:1px solid #ef4444;border-radius:14px;padding:20px;margin-bottom:18px;animation:fadeUp 0.3s ease}
+#req-detail{display:none;background:var(--surface2);border:1px solid #8b5cf6;border-radius:14px;padding:20px;margin-bottom:18px;animation:fadeUp 0.3s ease}
 .nov-report{background:var(--surface);border-radius:10px;padding:14px;margin-bottom:10px}
 .nov-report-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}
 .nov-tipo-badge{font-size:10px;padding:3px 9px;border-radius:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px}
@@ -202,6 +203,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       <div class="tabs" id="view-tabs" style="margin-bottom:0">
         <button class="tab active" id="btn-view-revistas" onclick="switchView('revistas')">📋 Revistas</button>
         <button class="tab" id="btn-view-novedades" onclick="switchView('novedades')">⚠️ Novedades</button>
+        <button class="tab" id="btn-view-requerimientos" onclick="switchView('requerimientos')">📝 Requerimientos</button>
       </div>
       <div class="badge"><span class="badge-dot"></span>En vivo</div>
       <div class="update-time" id="uptime">—</div>
@@ -486,6 +488,90 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   </div>
 </div><!-- /view-novedades -->
 
+<div id="view-requerimientos" style="display:none">
+  <!-- SELECTOR DE AÑO (REQUERIMIENTOS) -->
+  <div class="mes-selector" id="year-selector-req">
+    <span class="mes-selector-label">Año:</span>
+  </div>
+  <!-- SELECTOR DE MES (REQUERIMIENTOS) -->
+  <div class="mes-selector" id="mes-selector-req">
+    <span class="mes-selector-label">Mes:</span>
+  </div>
+
+  <div id="loading-req"><div class="spinner"></div><p>Cargando requerimientos...</p></div>
+  <div id="error-req"></div>
+
+  <div id="dashboard-req">
+    <div id="mes-loading-req"><div class="spinner" style="width:24px;height:24px;margin:0 auto 8px"></div>Cargando mes...</div>
+
+    <!-- SCORECARDS -->
+    <div class="sc-grid">
+      <div class="sc" style="--accent-color:#3b82f6">
+        <div class="sc-label">Total visitas</div>
+        <div class="sc-value" id="rsc-total">—</div>
+        <div class="sc-delta"><span id="rsc-sup">—</span> supervisores activos</div>
+        <div class="sc-bar-track"><div class="sc-bar-fill" id="rbar-total" style="width:0%"></div></div>
+      </div>
+      <div class="sc" style="--accent-color:#f59e0b">
+        <div class="sc-label">Con requerimiento</div>
+        <div class="sc-value" id="rsc-req">—</div>
+        <div class="sc-delta">Visitas con solicitud registrada</div>
+        <div class="sc-bar-track"><div class="sc-bar-fill" id="rbar-req" style="width:0%;background:#f59e0b"></div></div>
+      </div>
+      <div class="sc" style="--accent-color:#10b981">
+        <div class="sc-label">Clientes visitados</div>
+        <div class="sc-value" id="rsc-clientes">—</div>
+        <div class="sc-delta">Puntos distintos en el mes</div>
+        <div class="sc-bar-track"><div class="sc-bar-fill" id="rbar-clientes" style="width:0%;background:#10b981"></div></div>
+      </div>
+      <div class="sc" style="--accent-color:#8b5cf6">
+        <div class="sc-label">Mes</div>
+        <div class="sc-value" id="rsc-mes" style="font-size:22px">—</div>
+        <div class="sc-delta">Visitas registradas en Altum</div>
+        <div class="sc-bar-track"><div class="sc-bar-fill" id="rbar-mes" style="width:100%;background:#8b5cf6"></div></div>
+      </div>
+    </div>
+
+    <!-- FILA: Supervisores -->
+    <div class="row-full">
+      <div class="card">
+        <div class="card-title">Visitas y requerimientos por supervisor — mes completo</div>
+        <table class="sup-table">
+          <thead><tr><th>#</th><th>Supervisor</th><th>Visitas</th><th>Con requerimiento</th><th>Clientes distintos</th><th style="width:20%">Progreso</th></tr></thead>
+          <tbody id="req-sup-body"></tbody>
+        </table>
+        <div class="click-hint">👆 Haz clic en un supervisor para ver el detalle de sus visitas</div>
+      </div>
+    </div>
+
+    <!-- FILA: Cliente y requerimiento -->
+    <div class="row-full">
+      <div class="card">
+        <div class="card-title">Cliente y requerimiento — mes completo</div>
+        <div id="req-cliente-tabla"></div>
+      </div>
+    </div>
+
+    <!-- PANEL DETALLE SUPERVISOR (REQUERIMIENTOS) -->
+    <div id="req-detail">
+      <div class="sup-detail-header">
+        <div>
+          <div class="sup-detail-name" id="rdetail-name">—</div>
+          <div class="sup-detail-sub" id="rdetail-sub">—</div>
+        </div>
+        <button class="close-btn" onclick="closeReqSupervisor()">✕ Cerrar</button>
+      </div>
+      <div id="rdetail-list"></div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-text">Fuente: Altum Forms (Visitas a Clientes) → Google Sheets</div>
+      <div class="footer-text" id="footer-info-req"></div>
+    </div>
+    <div class="footer-dev">Desarrollado por <strong style="color:#f0f4ff">Andrés Torres</strong> · Científico de Datos</div>
+  </div>
+</div><!-- /view-requerimientos -->
+
 </div>
 </div>
 
@@ -527,6 +613,8 @@ if(sessionStorage.getItem(SK)==='1'){
 // REACCIONES_SHEET_ID: reemplaza por el ID real del libro "Altum Reacciones - Atlanta"
 // (lo ves en la URL: https://docs.google.com/spreadsheets/d/ESTE_ID/edit)
 const REACCIONES_SHEET_ID = '1pJCYoxAn0yhXdpFw3LEK2GWgEboHTTz6ewty2jmvvks';
+// REQUERIMIENTOS_SHEET_ID: reemplaza por el ID del libro "Altum Visitas Clientes - Atlanta"
+const REQUERIMIENTOS_SHEET_ID = 'PON_AQUI_EL_ID_DEL_SHEET_DE_VISITAS';
 
 function gvizUrl(s, sheetId=SHEET_ID){return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(s)}`;}
 
@@ -1033,19 +1121,25 @@ function renderRecorridos(data,supFiltro){
 // VISTA NOVEDADES / REACCIONES
 // ═══════════════════════════════════════════════════════════
 let novInit=false;
+let reqInit=false;
 let allKpisNov=[], allResumenNov=[];
 let novRawCache={};
 let novMesSel='', novSupSel='';
 
 function switchView(view){
-  const revistas=view==='revistas';
-  document.getElementById('view-revistas').style.display=revistas?'block':'none';
-  document.getElementById('view-novedades').style.display=revistas?'none':'block';
-  document.getElementById('btn-view-revistas').classList.toggle('active',revistas);
-  document.getElementById('btn-view-novedades').classList.toggle('active',!revistas);
-  if(!revistas && !novInit){
+  document.getElementById('view-revistas').style.display=view==='revistas'?'block':'none';
+  document.getElementById('view-novedades').style.display=view==='novedades'?'block':'none';
+  document.getElementById('view-requerimientos').style.display=view==='requerimientos'?'block':'none';
+  document.getElementById('btn-view-revistas').classList.toggle('active',view==='revistas');
+  document.getElementById('btn-view-novedades').classList.toggle('active',view==='novedades');
+  document.getElementById('btn-view-requerimientos').classList.toggle('active',view==='requerimientos');
+  if(view==='novedades' && !novInit){
     novInit=true;
     initNovedades();
+  }
+  if(view==='requerimientos' && !reqInit){
+    reqInit=true;
+    initRequerimientos();
   }
 }
 
@@ -1250,6 +1344,173 @@ function closeNovSupervisor(){
   document.getElementById('nov-detail').style.display='none';
   novSupSel='';
   document.querySelectorAll('#nov-sup-body tr.selected').forEach(tr=>tr.classList.remove('selected'));
+}
+
+// ═══════════════════════════════════════════════════════════
+// VISTA REQUERIMIENTOS (Visitas a Clientes)
+// ═══════════════════════════════════════════════════════════
+let allKpisReq=[], allResumenReq=[];
+let reqRawCache={};
+let reqMesSel='', reqSupSel='';
+
+function reqMesAnoToKey(mesAno){
+  const [mm,yy]=String(mesAno).split('/');
+  return `visitas_${yy}_${mm.padStart(2,'0')}`;
+}
+
+async function initRequerimientos(){
+  try{
+    [allKpisReq,allResumenReq]=await Promise.all([
+      fetchSheet('kpis_visitas', REQUERIMIENTOS_SHEET_ID),
+      fetchSheetSafe('resumen_supervisor_visitas', REQUERIMIENTOS_SHEET_ID)
+    ]);
+    if(!allKpisReq.length)throw new Error('La hoja kpis_visitas está vacía');
+
+    const mesesSet=new Set(allKpisReq.map(r=>String(r.mes_año||'')).filter(Boolean));
+    const meses=[...mesesSet];
+
+    const defaultMesReq=buildYearMonthSelector(meses, {
+      yearContainerId:'year-selector-req',
+      monthContainerId:'mes-selector-req',
+      onSelectMonth: async(m)=>{
+        reqMesSel=m; reqSupSel='';
+        closeReqSupervisor();
+        await cargarYRenderReqMes(m);
+      }
+    });
+
+    reqMesSel=defaultMesReq;
+    await cargarYRenderReqMes(reqMesSel);
+
+    document.getElementById('loading-req').style.display='none';
+    document.getElementById('dashboard-req').style.display='block';
+  }catch(err){
+    document.getElementById('loading-req').style.display='none';
+    const el=document.getElementById('error-req');
+    el.style.display='block';
+    el.innerHTML=`<strong>Error al cargar requerimientos</strong><br><br>${err.message}<br><br>
+    Verifica que REQUERIMIENTOS_SHEET_ID esté puesto correctamente en el código, y que la hoja
+    "Altum Visitas Clientes - Atlanta" esté compartida como "Cualquier persona con el enlace puede ver".`;
+  }
+}
+
+async function getReqRawMes(mesAno){
+  const key=reqMesAnoToKey(mesAno);
+  if(!reqRawCache[key]){
+    reqRawCache[key]=await fetchSheetSafe(key, REQUERIMIENTOS_SHEET_ID);
+  }
+  return reqRawCache[key];
+}
+
+async function cargarYRenderReqMes(mes){
+  document.getElementById('mes-loading-req').style.display='block';
+  try{
+    const raw=await getReqRawMes(mes);
+    renderReqMes(mes, raw);
+  }finally{
+    document.getElementById('mes-loading-req').style.display='none';
+  }
+}
+
+function renderReqMes(mes, raw){
+  const kpisMes=allKpisReq.filter(r=>String(r.mes_año||'')===mes);
+  const l=kpisMes[kpisMes.length-1];
+  if(!l){console.warn('Sin KPIs de visitas para mes',mes);return;}
+
+  const total=num(l.total_visitas), conReq=num(l.con_requerimiento);
+  const clientes=num(l.clientes_visitados), sup=num(l.supervisores_activos);
+
+  document.getElementById('rsc-total').textContent=fmt(total);
+  document.getElementById('rsc-sup').innerHTML=`<span>${sup}</span> supervisores activos`;
+  document.getElementById('rsc-req').textContent=fmt(conReq);
+  document.getElementById('rsc-clientes').textContent=fmt(clientes);
+  document.getElementById('rsc-mes').textContent=mesLabel(mes);
+  document.getElementById('footer-info-req').textContent=`${mesLabel(mes)} · ${fmt(total)} visitas`;
+
+  setTimeout(()=>{
+    document.getElementById('rbar-total').style.width='100%';
+    document.getElementById('rbar-req').style.width=total>0?(conReq/total*100)+'%':'0%';
+    document.getElementById('rbar-clientes').style.width=total>0?Math.min(clientes/total*100,100)+'%':'0%';
+  },200);
+
+  // Tabla por supervisor
+  const resumenMes=allResumenReq.filter(r=>String(r.mes_año||'')===mes)
+    .sort((a,b)=>num(b.total_visitas)-num(a.total_visitas));
+  const maxTot=resumenMes.length?Math.max(...resumenMes.map(r=>num(r.total_visitas))):1;
+  document.getElementById('req-sup-body').innerHTML=resumenMes.length?
+    resumenMes.map((r,i)=>{
+      const u=String(r.Usuario||'').trim();
+      const short=u.split(' ').slice(-2).join(' ');
+      const t=num(r.total_visitas);
+      return `<tr class="clickable" onclick="selectReqSupervisor('${u.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
+        <td><span class="rank-badge" style="background:${SUP_COLORS[i%10]}22;color:${SUP_COLORS[i%10]}">${i+1}</span></td>
+        <td><span class="sup-name" title="${u}">${short}</span></td>
+        <td><span style="font-family:var(--mono);font-weight:500">${fmt(t)}</span></td>
+        <td>${fmt(num(r.con_requerimiento))}</td>
+        <td>${fmt(num(r.clientes_distintos))}</td>
+        <td><div class="sup-bar-wrap"><div class="sup-bar-track"><div class="sup-bar-fill" style="width:${(t/maxTot*100).toFixed(0)}%;background:${SUP_COLORS[i%10]}"></div></div></div></td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="6" class="no-data">Sin visitas este mes</td></tr>';
+
+  renderReqClienteTabla(raw);
+}
+
+function renderReqClienteTabla(raw){
+  const rows=[...raw].sort((a,b)=>toISODate(b.Fecha).localeCompare(toISODate(a.Fecha))||String(b.Hora||'').localeCompare(String(a.Hora||'')));
+  const el=document.getElementById('req-cliente-tabla');
+  if(!rows.length){el.innerHTML='<div class="no-data">Sin visitas este mes</div>';return;}
+  el.innerHTML=`<div style="max-height:360px;overflow-y:auto"><table class="rec-table">
+    <thead><tr><th>Fecha</th><th>Cliente</th><th>Requerimiento</th><th>Supervisor</th></tr></thead>
+    <tbody>${rows.map(r=>{
+      const req=r['REQUERIMIENTOS DEL CLIENTE']||'—';
+      const sup=String(r.Usuario||'').split(' ').slice(-2).join(' ');
+      return `<tr>
+        <td style="font-family:var(--mono);font-size:12px">${toISODate(r.Fecha)}</td>
+        <td><span class="cliente-name" title="${r['CLIENTE VISITADO']||''}">${r['CLIENTE VISITADO']||'—'}</span></td>
+        <td>${req}</td>
+        <td><span class="sup-name" title="${r.Usuario||''}">${sup}</span></td>
+      </tr>`;
+    }).join('')}</tbody></table></div>`;
+}
+
+function selectReqSupervisor(sup){
+  reqSupSel=sup;
+  const raw=reqRawCache[reqMesAnoToKey(reqMesSel)]||[];
+  const visitas=raw.filter(r=>String(r.Usuario||'').trim()===sup)
+    .sort((a,b)=>toISODate(b.Fecha).localeCompare(toISODate(a.Fecha)));
+
+  document.getElementById('rdetail-name').textContent=sup;
+  document.getElementById('rdetail-sub').textContent=`${mesLabel(reqMesSel)} · ${visitas.length} visitas`;
+
+  document.getElementById('rdetail-list').innerHTML=visitas.length?
+    `<div style="max-height:420px;overflow-y:auto">${visitas.map(r=>{
+      return `<div class="nov-report">
+        <div class="nov-report-head">
+          <span class="nov-tipo-badge" style="background:rgba(139,92,246,0.14);color:#c4b5fd">VISITA</span>
+          <span class="nov-report-meta">${toISODate(r.Fecha)} · ${String(r.Hora||'').slice(0,8)}</span>
+        </div>
+        <div class="nov-report-meta" style="margin-bottom:6px">
+          <strong style="color:var(--text)">${r['CLIENTE VISITADO']||'—'}</strong> · ${r['NOMBRE DEL CLIENTE']||''}
+        </div>
+        ${r['OBSERVACIONES DEL CLIENTE']?`<div class="nov-report-body" style="margin-bottom:6px"><strong>Observaciones:</strong> ${r['OBSERVACIONES DEL CLIENTE']}</div>`:''}
+        ${r['REQUERIMIENTOS DEL CLIENTE']?`<div class="nov-report-body" style="margin-bottom:6px"><strong>Requerimiento:</strong> ${r['REQUERIMIENTOS DEL CLIENTE']}</div>`:''}
+        ${r['COMPROMISOS ADQUIRIDOS CON EL CLIENTE']?`<div class="nov-report-body"><strong>Compromiso:</strong> ${r['COMPROMISOS ADQUIRIDOS CON EL CLIENTE']}</div>`:''}
+      </div>`;
+    }).join('')}</div>` :
+    '<div class="no-data">Sin visitas para este supervisor en este mes.</div>';
+
+  const panel=document.getElementById('req-detail');
+  panel.style.display='block';
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  document.querySelectorAll('#req-sup-body tr.clickable').forEach(tr=>{
+    tr.classList.toggle('selected',tr.querySelector('.sup-name')?.title===sup);
+  });
+}
+
+function closeReqSupervisor(){
+  document.getElementById('req-detail').style.display='none';
+  reqSupSel='';
+  document.querySelectorAll('#req-sup-body tr.selected').forEach(tr=>tr.classList.remove('selected'));
 }
 
 if(sessionStorage.getItem(SK)==='1') init();
