@@ -48,6 +48,9 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .mes-btn{font-size:12px;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.15s;font-family:var(--font)}
 .mes-btn:hover{border-color:var(--border2);color:var(--text)}
 .mes-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+.year-select{background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:6px 16px;color:var(--text);font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;outline:none;transition:border-color 0.15s}
+.year-select:hover{border-color:var(--accent)}
+.year-select:focus{border-color:var(--accent)}
 
 /* LOADING/ERROR */
 #loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:16px}
@@ -681,18 +684,17 @@ function buildYearMonthSelector(meses, {yearContainerId, monthContainerId, onSel
     return defaultMonth;
   }
 
+  const select=document.createElement('select');
+  select.className='year-select';
   years.forEach(y=>{
-    const btn=document.createElement('button');
-    btn.className='mes-btn'+(y===defaultYear?' active':'');
-    btn.textContent=y;
-    btn.dataset.year=y;
-    btn.onclick=()=>{
-      yearEl.querySelectorAll('.mes-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      renderMonths(y, true);
-    };
-    yearEl.appendChild(btn);
+    const opt=document.createElement('option');
+    opt.value=y;
+    opt.textContent=y;
+    if(y===defaultYear) opt.selected=true;
+    select.appendChild(opt);
   });
+  select.onchange=()=>renderMonths(select.value, true);
+  yearEl.appendChild(select);
 
   return renderMonths(defaultYear, false);
 }
