@@ -1246,36 +1246,35 @@ async function renderClientesRevistas(rawRows, esMesActual){
   let bottomList;
   let tituloBottom='Top 15 clientes con menos revistas';
 
-  if(esMesActual){
-    // Solo tiene sentido calcular "sin visita" contra la lista de clientes
-    // activos para el mes EN CURSO (la lista no tiene histórico por mes).
-    try{
-      const activos=await getClientesActivos();
-      if(!activos.length){
-        console.warn('⚠️ Lista de clientes activos vacía — usando fallback de "menos revistas" en vez de "sin visita".');
-        bottomList=[...entries].sort((a,b)=>a[1]-b[1]).slice(0,15);
-      } else {
-        const visitadosKeys=new Set(Object.keys(counts).map(c=>c.trim().toUpperCase().replace(/\s+/g,' ')));
-        const sinVisita=[...new Set(activos)].filter(nombre=>{
-          const key=nombre.trim().toUpperCase().replace(/\s+/g,' ');
-          if(!key || key.includes('CENTRAL ATLANTA'))return false;
-          return !visitadosKeys.has(key);
-        });
-
-        if(sinVisita.length>=15){
-          bottomList=sinVisita.slice(0,15).map(n=>[n,0]);
-        } else {
-          const faltan=15-sinVisita.length;
-          const conVisitasAsc=[...entries].sort((a,b)=>a[1]-b[1]).slice(0,faltan);
-          bottomList=[...sinVisita.map(n=>[n,0]), ...conVisitasAsc];
-        }
-        tituloBottom='Top 15 clientes sin visita';
-      }
-    }catch(e){
-      console.warn('No se pudo cargar clientes activos, usando fallback:', e);
+  // La comparación "sin visita" se hace contra la lista ACTUAL de clientes
+  // activos (no hay histórico por mes de esa lista), así que en meses
+  // pasados puede incluir clientes que en ese momento no eran activos
+  // todavía, o excluir a los que ya se dieron de baja. Lo dejamos igual
+  // así porque el usuario prefiere verlo en todos los meses.
+  try{
+    const activos=await getClientesActivos();
+    if(!activos.length){
+      console.warn('⚠️ Lista de clientes activos vacía — usando fallback de "menos revistas" en vez de "sin visita".');
       bottomList=[...entries].sort((a,b)=>a[1]-b[1]).slice(0,15);
+    } else {
+      const visitadosKeys=new Set(Object.keys(counts).map(c=>c.trim().toUpperCase().replace(/\s+/g,' ')));
+      const sinVisita=[...new Set(activos)].filter(nombre=>{
+        const key=nombre.trim().toUpperCase().replace(/\s+/g,' ');
+        if(!key || key.includes('CENTRAL ATLANTA'))return false;
+        return !visitadosKeys.has(key);
+      });
+
+      if(sinVisita.length>=15){
+        bottomList=sinVisita.slice(0,15).map(n=>[n,0]);
+      } else {
+        const faltan=15-sinVisita.length;
+        const conVisitasAsc=[...entries].sort((a,b)=>a[1]-b[1]).slice(0,faltan);
+        bottomList=[...sinVisita.map(n=>[n,0]), ...conVisitasAsc];
+      }
+      tituloBottom=esMesActual?'Top 15 clientes sin visita':'Top 15 clientes sin visita (vs. clientes activos actuales)';
     }
-  } else {
+  }catch(e){
+    console.warn('No se pudo cargar clientes activos, usando fallback:', e);
     bottomList=[...entries].sort((a,b)=>a[1]-b[1]).slice(0,15);
   }
 
@@ -2035,12 +2034,14 @@ async function renderCVSinVisita(mes, raw){
   const [mm,yy]=mes.split('/');
   const esMesActual=parseInt(yy)===ahora.getFullYear()&&parseInt(mm)===(ahora.getMonth()+1);
 
-  if(!esMesActual){
-    if(tituloEl) tituloEl.innerHTML='Clientes sin visita <span class="card-badge">Solo disponible para el mes en curso</span>';
-    el.innerHTML='<div class="no-data">Esta comparación solo está disponible para el mes en curso, porque la lista de clientes activos no guarda histórico por mes.</div>';
-    return;
+  // La lista de clientes activos solo refleja el estado ACTUAL (sin
+  // histórico por mes). Aun así, el usuario prefiere ver esta comparación
+  // en todos los meses, dejando claro que se compara contra la lista de hoy.
+  if(tituloEl){
+    tituloEl.innerHTML = esMesActual
+      ? 'Clientes sin visita <span class="card-badge">Vs. clientes activos actuales</span>'
+      : 'Clientes sin visita <span class="card-badge">Vs. clientes activos actuales (no histórico)</span>';
   }
-  if(tituloEl) tituloEl.innerHTML='Clientes sin visita <span class="card-badge">Solo mes en curso</span>';
 
   try{
     const activos=await getClientesActivos();
