@@ -343,7 +343,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
         <div id="clientes-top"></div>
       </div>
       <div class="card">
-        <div class="card-title">Top 10 clientes con menos revistas <span class="card-badge">Sin Central Atlanta</span></div>
+        <div class="card-title" id="clientes-bottom-title">Top 15 clientes con menos revistas <span class="card-badge">Sin Central Atlanta</span></div>
         <div id="clientes-bottom"></div>
       </div>
     </div>
@@ -661,7 +661,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       <div class="card">
         <div class="card-title">Visitas por coordinador — mes completo</div>
         <table class="sup-table">
-          <thead><tr><th>#</th><th>Coordinador</th><th>Visitas</th><th>Con compromiso</th><th>Clientes distintos</th><th style="width:20%">Progreso</th></tr></thead>
+          <thead><tr><th>#</th><th>Coordinador</th><th>Visitas</th><th>Clientes distintos</th><th style="width:25%">Progreso</th></tr></thead>
           <tbody id="cv-sup-body"></tbody>
         </table>
         <div class="click-hint">👆 Haz clic en un coordinador para ver el detalle de sus visitas</div>
@@ -670,7 +670,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 
     <div class="row-full">
       <div class="card">
-        <div class="card-title">Cliente y compromiso — mes completo</div>
+        <div class="card-title" id="cv-sinvisita-title">Clientes sin visita <span class="card-badge">Solo mes en curso</span></div>
         <div id="cv-cliente-tabla"></div>
       </div>
     </div>
@@ -824,6 +824,9 @@ const REQUERIMIENTOS_SHEET_ID = '1sZdPE6JUg88nB5STzxRJX335RzvfFfKTcR-3GTe74-o';
 // Sheets de COORDINADORES (independientes de los de Supervisores)
 const CONTROL_VISITAS_SHEET_ID = '1dQ5Q7X9KU2PxS9GiprbIUqf3bOO6ZRnNGl2SmuzmkAE';
 const VULNERABILIDAD_SHEET_ID = '1X3phRIq6qPVNBdtQvNjCSdl0JUpgEsB3gxwZB3NORqw';
+// Lista de clientes activos (mantenida manualmente). Solo refleja el estado
+// ACTUAL, por eso el cruce "sin visita" solo es válido para el mes en curso.
+const CLIENTES_SHEET_ID = '1Neookd5_9W9g9hyQH-oxj_hTxveX9B7yGyN2Rqy7VsM';
 
 function gvizUrl(s, sheetId=SHEET_ID){return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(s)}`;}
 
@@ -1013,14 +1016,14 @@ async function cargarYRenderMes(mes){
   document.getElementById('mes-loading').style.display='block';
   try{
     const raw=await getRawMes(mes);
-    renderMes(mes, raw);
+    await renderMes(mes, raw);
   }finally{
     document.getElementById('mes-loading').style.display='none';
   }
 }
 
 // ── RENDER MES ──
-function renderMes(mes, raw){
+async function renderMes(mes, raw){
   // KPI más reciente del mes
   const kpisMes=allKpis.filter(r=>String(r.mes_año||'')===mes);
   const l=kpisMes[kpisMes.length-1];
@@ -1084,7 +1087,7 @@ function renderMes(mes, raw){
   drawDayBars(rawNorm);
   renderSupMes(rawNorm, dia);
   renderSupProm(rawNorm, dia);
-  renderClientesRevistas(rawNorm);
+  await renderClientesRevistas(rawNorm, esMesActual);
   renderRevistasCiudad(rawNorm);
 
   // Recorridos del mes
@@ -1116,6 +1119,18 @@ function drawDayBars(rawRows){
       <div class="daybar-day">${dia}</div>
     </div>`;
   }).join('')+'</div>';
+}
+
+// ── Lista de clientes activos (hoja "HOJA", columna "NOMBRE CLIENTE") ──
+// Solo representa el estado ACTUAL de la empresa, por eso solo se usa para
+// calcular "sin visita" en el mes en curso — para meses pasados no sabemos
+// con certeza quién era cliente activo en ese momento.
+let clientesActivosCache=null;
+async function getClientesActivos(){
+  if(clientesActivosCache) return clientesActivosCache;
+  const rows=await fetchSheetSafe('HOJA', CLIENTES_SHEET_ID);
+  clientesActivosCache=rows.map(r=>String(r['NOMBRE CLIENTE']||'').trim()).filter(Boolean);
+  return clientesActivosCache;
 }
 
 // ── Normalizar y agrupar nombres de ciudad (unifica "BOGOTA"/"Bogotá"/"Bogota") ──
@@ -1172,7 +1187,7 @@ function renderRevistasCiudad(rawRows){
   renderBarrasCiudad('revistas-ciudad-chart', entries);
 }
 
-function renderClientesRevistas(rawRows){
+async function renderClientesRevistas(rawRows, esMesActual){
   const counts={};
   rawRows.forEach(r=>{
     const c=String(r['CLIENTE VISITADO']||'').trim();
@@ -1184,25 +1199,60 @@ function renderClientesRevistas(rawRows){
   });
   const entries=Object.entries(counts);
   const top15=[...entries].sort((a,b)=>b[1]-a[1]).slice(0,15);
-  const bottom10=[...entries].sort((a,b)=>a[1]-b[1]).slice(0,10);
+
+  let bottomList;
+  let tituloBottom='Top 15 clientes con menos revistas';
+
+  if(esMesActual){
+    // Solo tiene sentido calcular "sin visita" contra la lista de clientes
+    // activos para el mes EN CURSO (la lista no tiene histórico por mes).
+    try{
+      const activos=await getClientesActivos();
+      const visitadosKeys=new Set(Object.keys(counts).map(c=>c.trim().toUpperCase().replace(/\s+/g,' ')));
+      const sinVisita=[...new Set(activos)].filter(nombre=>{
+        const key=nombre.trim().toUpperCase().replace(/\s+/g,' ');
+        if(!key || key.includes('CENTRAL ATLANTA'))return false;
+        return !visitadosKeys.has(key);
+      });
+
+      if(sinVisita.length>=15){
+        bottomList=sinVisita.slice(0,15).map(n=>[n,0]);
+      } else {
+        const faltan=15-sinVisita.length;
+        const conVisitasAsc=[...entries].sort((a,b)=>a[1]-b[1]).slice(0,faltan);
+        bottomList=[...sinVisita.map(n=>[n,0]), ...conVisitasAsc];
+      }
+      tituloBottom='Top 15 clientes sin visita';
+    }catch(e){
+      console.warn('No se pudo cargar clientes activos, usando fallback:', e);
+      bottomList=[...entries].sort((a,b)=>a[1]-b[1]).slice(0,15);
+    }
+  } else {
+    bottomList=[...entries].sort((a,b)=>a[1]-b[1]).slice(0,15);
+  }
 
   const renderList=(list)=>{
     if(!list.length)return '<div class="no-data">Sin datos</div>';
-    const maxV=Math.max(...list.map(([,c])=>c));
+    const maxV=Math.max(...list.map(([,c])=>c), 1);
     return `<div style="display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto">
       ${list.map(([p,c],i)=>`<div style="display:flex;align-items:center;gap:10px">
         <span style="font-size:11px;color:var(--muted);width:16px;text-align:right">${i+1}</span>
         <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${p}">${p}</span>
-        <div style="width:100px;height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden">
-          <div style="height:100%;width:${(c/maxV*100).toFixed(0)}%;background:${SUP_COLORS[i%10]};border-radius:3px"></div>
-        </div>
-        <span style="font-family:var(--mono);font-size:12px;color:var(--muted);width:24px;text-align:right">${c}</span>
+        ${c===0?
+          '<span class="nov-tipo-badge nov-tipo-reaccion" style="font-size:9px">SIN VISITA</span>':
+          `<div style="width:100px;height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${(c/maxV*100).toFixed(0)}%;background:${SUP_COLORS[i%10]};border-radius:3px"></div>
+          </div>
+          <span style="font-family:var(--mono);font-size:12px;color:var(--muted);width:24px;text-align:right">${c}</span>`
+        }
       </div>`).join('')}
     </div>`;
   };
 
   document.getElementById('clientes-top').innerHTML=renderList(top15);
-  document.getElementById('clientes-bottom').innerHTML=renderList(bottom10);
+  document.getElementById('clientes-bottom').innerHTML=renderList(bottomList);
+  const tituloEl=document.getElementById('clientes-bottom-title');
+  if(tituloEl) tituloEl.innerHTML=`${tituloBottom} <span class="card-badge">Sin Central Atlanta</span>`;
 }
 
 // ── DONUT ──
@@ -1877,13 +1927,13 @@ async function cargarYRenderCVMes(mes){
   document.getElementById('mes-loading-cv').style.display='block';
   try{
     const raw=await getCVRawMes(mes);
-    renderCVMes(mes, raw);
+    await renderCVMes(mes, raw);
   }finally{
     document.getElementById('mes-loading-cv').style.display='none';
   }
 }
 
-function renderCVMes(mes, raw){
+async function renderCVMes(mes, raw){
   const kpisMes=allKpisCV.filter(r=>String(r.mes_año||'')===mes);
   const l=kpisMes[kpisMes.length-1];
   if(!l){console.warn('Sin KPIs de control de visitas para mes',mes);return;}
@@ -1916,13 +1966,12 @@ function renderCVMes(mes, raw){
         <td><span class="rank-badge" style="background:${SUP_COLORS[i%10]}22;color:${SUP_COLORS[i%10]}">${i+1}</span></td>
         <td><span class="sup-name" title="${u}">${short}</span></td>
         <td><span style="font-family:var(--mono);font-weight:500">${fmt(t)}</span></td>
-        <td>${fmt(num(r.con_compromiso))}</td>
         <td>${fmt(num(r.clientes_distintos))}</td>
         <td><div class="sup-bar-wrap"><div class="sup-bar-track"><div class="sup-bar-fill" style="width:${(t/maxTot*100).toFixed(0)}%;background:${SUP_COLORS[i%10]}"></div></div></div></td>
       </tr>`;
-    }).join('') : '<tr><td colspan="6" class="no-data">Sin visitas este mes</td></tr>';
+    }).join('') : '<tr><td colspan="5" class="no-data">Sin visitas este mes</td></tr>';
 
-  renderCVClienteTabla(raw);
+  await renderCVSinVisita(mes, raw);
 }
 
 function renderCVCiudad(raw){
@@ -1930,22 +1979,46 @@ function renderCVCiudad(raw){
   renderBarrasCiudad('cv-ciudad-chart', entries);
 }
 
-function renderCVClienteTabla(raw){
-  const rows=[...raw].sort((a,b)=>toISODate(b.Fecha).localeCompare(toISODate(a.Fecha)));
+async function renderCVSinVisita(mes, raw){
   const el=document.getElementById('cv-cliente-tabla');
-  if(!rows.length){el.innerHTML='<div class="no-data">Sin visitas este mes</div>';return;}
-  el.innerHTML=`<div style="max-height:360px;overflow-y:auto"><table class="rec-table">
-    <thead><tr><th>Fecha</th><th>Cliente</th><th>Compromiso</th><th>Coordinador</th></tr></thead>
-    <tbody>${rows.map(r=>{
-      const sup=String(r.Usuario||'').split(' ').slice(-2).join(' ');
-      const compromiso=r['COMPROMISOS']||'—';
-      return `<tr>
-        <td style="font-family:var(--mono);font-size:12px">${toISODate(r.Fecha)}</td>
-        <td><span class="cliente-name" title="${r['CLIENTE VISITADO']||''}">${r['CLIENTE VISITADO']||'—'}</span></td>
-        <td><span class="cliente-name" title="${compromiso}">${compromiso}</span></td>
-        <td><span class="sup-name" title="${r.Usuario||''}">${sup}</span></td>
-      </tr>`;
-    }).join('')}</tbody></table></div>`;
+  const tituloEl=document.getElementById('cv-sinvisita-title');
+
+  const ahora=new Date();
+  const [mm,yy]=mes.split('/');
+  const esMesActual=parseInt(yy)===ahora.getFullYear()&&parseInt(mm)===(ahora.getMonth()+1);
+
+  if(!esMesActual){
+    if(tituloEl) tituloEl.innerHTML='Clientes sin visita <span class="card-badge">Solo disponible para el mes en curso</span>';
+    el.innerHTML='<div class="no-data">Esta comparación solo está disponible para el mes en curso, porque la lista de clientes activos no guarda histórico por mes.</div>';
+    return;
+  }
+  if(tituloEl) tituloEl.innerHTML='Clientes sin visita <span class="card-badge">Solo mes en curso</span>';
+
+  try{
+    const activos=await getClientesActivos();
+    const visitadosKeys=new Set(
+      raw.map(r=>String(r['CLIENTE VISITADO']||'').trim().toUpperCase().replace(/\s+/g,' ')).filter(Boolean)
+    );
+    const sinVisita=[...new Set(activos)].filter(nombre=>{
+      const key=nombre.trim().toUpperCase().replace(/\s+/g,' ');
+      return key && !visitadosKeys.has(key);
+    });
+
+    if(!sinVisita.length){
+      el.innerHTML='<div class="no-data">Todos los clientes activos tienen al menos una visita este mes 🎉</div>';
+      return;
+    }
+
+    el.innerHTML=`<div style="max-height:360px;overflow-y:auto"><table class="rec-table">
+      <thead><tr><th>#</th><th>Cliente</th></tr></thead>
+      <tbody>${sinVisita.map((c,i)=>`<tr>
+        <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">${i+1}</td>
+        <td>${c}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  }catch(e){
+    console.warn('No se pudo cargar clientes activos:', e);
+    el.innerHTML='<div class="no-data">No se pudo cargar la lista de clientes activos.</div>';
+  }
 }
 
 function selectCVSupervisor(sup){
@@ -1967,7 +2040,6 @@ function selectCVSupervisor(sup){
         <div class="nov-report-meta" style="margin-bottom:6px">
           <strong style="color:var(--text)">${r['CLIENTE VISITADO']||'—'}</strong> · ${r['NOMBRE DE LA PERSONA VISITADA']||''} ${r['CARGO DE LA PERSONA VISITADA']?'('+r['CARGO DE LA PERSONA VISITADA']+')':''}
         </div>
-        ${r['COMPROMISOS']?`<div class="nov-report-body" style="margin-bottom:6px"><strong>Compromiso:</strong> ${r['COMPROMISOS']}</div>`:''}
         ${r['OBSERVACIONES']?`<div class="nov-report-body" style="margin-bottom:6px"><strong>Observaciones:</strong> ${r['OBSERVACIONES']}</div>`:''}
         ${r['COMENTARIOS']?`<div class="nov-report-body"><strong>Comentarios:</strong> ${r['COMENTARIOS']}</div>`:''}
       </div>`;
