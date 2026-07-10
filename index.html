@@ -833,10 +833,10 @@ function gvizUrl(s, sheetId=SHEET_ID){return `https://docs.google.com/spreadshee
 function parseGviz(text){
   const json=JSON.parse(text.replace(/^[^\(]+\(/,'').replace(/\);\s*$/,''));
   const rows=json.table.rows;
-  if(!rows||rows.length<2)return[];
-  const hdrs=rows[0].c.map(c=>c?c.v:'');
-  return rows.slice(1).map(r=>Object.fromEntries(hdrs.map((h,i)=>{
-    const cell=r.c[i];
+  const cols=json.table.cols||[];
+  if(!rows||!rows.length)return[];
+
+  const extraerValor=(cell)=>{
     // Manejar objetos Date de gviz (vienen como {v: "Date(2026,3,30)", f: "30/04/2026"})
     let val='';
     if(cell){
@@ -844,8 +844,25 @@ function parseGviz(text){
       else if(cell.f) val=cell.f;  // usar valor formateado
       else if(cell.v!==null&&cell.v!==undefined) val=String(cell.v);
     }
-    return [h,val];
-  })));
+    return val;
+  };
+
+  // Google a veces detecta automáticamente encabezados reales en hojas
+  // "limpias" (tipos de dato consistentes por columna) y los separa en
+  // json.table.cols, dejando en 'rows' SOLO datos. Otras veces (típicamente
+  // en las hojas que escriben nuestros extractores) no los detecta, y la
+  // fila 0 de 'rows' es en realidad el encabezado como texto plano.
+  // Detectamos cuál caso es mirando si cols trae labels no vacíos.
+  const colsConEtiquetas = cols.length>0 && cols.some(c=>c.label && String(c.label).trim()!=='');
+
+  if(colsConEtiquetas){
+    const hdrs=cols.map(c=>c.label||'');
+    return rows.map(r=>Object.fromEntries(hdrs.map((h,i)=>[h, extraerValor(r.c[i])])));
+  }
+
+  if(rows.length<2)return[];
+  const hdrs=rows[0].c.map(c=>c?c.v:'');
+  return rows.slice(1).map(r=>Object.fromEntries(hdrs.map((h,i)=>[h, extraerValor(r.c[i])])));
 }
 
 async function fetchSheet(name, sheetId=SHEET_ID){
