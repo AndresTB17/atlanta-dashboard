@@ -1128,8 +1128,34 @@ function drawDayBars(rawRows){
 let clientesActivosCache=null;
 async function getClientesActivos(){
   if(clientesActivosCache) return clientesActivosCache;
+
   const rows=await fetchSheetSafe('HOJA', CLIENTES_SHEET_ID);
-  clientesActivosCache=rows.map(r=>String(r['NOMBRE CLIENTE']||'').trim()).filter(Boolean);
+  console.log(`🔍 DEBUG clientes activos: ${rows.length} filas leídas de la hoja "HOJA"`);
+
+  if(!rows.length){
+    console.warn('⚠️ La hoja de clientes activos no devolvió filas. Revisa que la pestaña se llame exactamente "HOJA" y que esté compartida con el service account.');
+    clientesActivosCache=[];
+    return clientesActivosCache;
+  }
+
+  // No asumimos el nombre exacto del encabezado ("NOMBRE CLIENTE" puede venir
+  // con mayúsculas/espacios distintos) — buscamos la columna que más se
+  // parezca, y si no la encontramos, usamos la primera columna que no sea "ID".
+  const headers=Object.keys(rows[0]);
+  let columnaCliente=headers.find(h=>{
+    const hu=h.toUpperCase().replace(/\s+/g,' ').trim();
+    return hu.includes('NOMBRE') && hu.includes('CLIENTE');
+  });
+  if(!columnaCliente){
+    columnaCliente=headers.find(h=>h.toUpperCase().trim()!=='ID');
+  }
+  console.log(`🔍 DEBUG columna usada para nombre de cliente: "${columnaCliente}"`);
+
+  clientesActivosCache=rows
+    .map(r=>String(r[columnaCliente]||'').trim())
+    .filter(n=>n && n.toLowerCase()!=='nan');
+
+  console.log(`🔍 DEBUG total clientes activos cargados: ${clientesActivosCache.length}`, clientesActivosCache.slice(0,5));
   return clientesActivosCache;
 }
 
@@ -1208,21 +1234,26 @@ async function renderClientesRevistas(rawRows, esMesActual){
     // activos para el mes EN CURSO (la lista no tiene histórico por mes).
     try{
       const activos=await getClientesActivos();
-      const visitadosKeys=new Set(Object.keys(counts).map(c=>c.trim().toUpperCase().replace(/\s+/g,' ')));
-      const sinVisita=[...new Set(activos)].filter(nombre=>{
-        const key=nombre.trim().toUpperCase().replace(/\s+/g,' ');
-        if(!key || key.includes('CENTRAL ATLANTA'))return false;
-        return !visitadosKeys.has(key);
-      });
-
-      if(sinVisita.length>=15){
-        bottomList=sinVisita.slice(0,15).map(n=>[n,0]);
+      if(!activos.length){
+        console.warn('⚠️ Lista de clientes activos vacía — usando fallback de "menos revistas" en vez de "sin visita".');
+        bottomList=[...entries].sort((a,b)=>a[1]-b[1]).slice(0,15);
       } else {
-        const faltan=15-sinVisita.length;
-        const conVisitasAsc=[...entries].sort((a,b)=>a[1]-b[1]).slice(0,faltan);
-        bottomList=[...sinVisita.map(n=>[n,0]), ...conVisitasAsc];
+        const visitadosKeys=new Set(Object.keys(counts).map(c=>c.trim().toUpperCase().replace(/\s+/g,' ')));
+        const sinVisita=[...new Set(activos)].filter(nombre=>{
+          const key=nombre.trim().toUpperCase().replace(/\s+/g,' ');
+          if(!key || key.includes('CENTRAL ATLANTA'))return false;
+          return !visitadosKeys.has(key);
+        });
+
+        if(sinVisita.length>=15){
+          bottomList=sinVisita.slice(0,15).map(n=>[n,0]);
+        } else {
+          const faltan=15-sinVisita.length;
+          const conVisitasAsc=[...entries].sort((a,b)=>a[1]-b[1]).slice(0,faltan);
+          bottomList=[...sinVisita.map(n=>[n,0]), ...conVisitasAsc];
+        }
+        tituloBottom='Top 15 clientes sin visita';
       }
-      tituloBottom='Top 15 clientes sin visita';
     }catch(e){
       console.warn('No se pudo cargar clientes activos, usando fallback:', e);
       bottomList=[...entries].sort((a,b)=>a[1]-b[1]).slice(0,15);
@@ -1996,6 +2027,10 @@ async function renderCVSinVisita(mes, raw){
 
   try{
     const activos=await getClientesActivos();
+    if(!activos.length){
+      el.innerHTML=`<div class="no-data">⚠️ No se pudo leer la lista de clientes activos (0 filas). Verifica que la hoja "Clientes Atlanta - Altum" tenga una pestaña llamada exactamente <strong>HOJA</strong> y que esté compartida como "Cualquier persona con el enlace puede ver".</div>`;
+      return;
+    }
     const visitadosKeys=new Set(
       raw.map(r=>String(r['CLIENTE VISITADO']||'').trim().toUpperCase().replace(/\s+/g,' ')).filter(Boolean)
     );
@@ -2005,7 +2040,7 @@ async function renderCVSinVisita(mes, raw){
     });
 
     if(!sinVisita.length){
-      el.innerHTML='<div class="no-data">Todos los clientes activos tienen al menos una visita este mes 🎉</div>';
+      el.innerHTML=`<div class="no-data">Todos los ${activos.length} clientes activos tienen al menos una visita este mes 🎉</div>`;
       return;
     }
 
