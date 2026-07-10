@@ -1258,6 +1258,7 @@ async function renderClientesRevistas(rawRows, esMesActual){
       bottomList=[...entries].sort((a,b)=>a[1]-b[1]).slice(0,15);
     } else {
       const visitadosKeys=new Set(Object.keys(counts).map(c=>c.trim().toUpperCase().replace(/\s+/g,' ')));
+      console.log(`🔍 DEBUG (Revistas) ${rawRows.length} registros crudos, ${visitadosKeys.size} clientes distintos visitados, ${activos.length} clientes activos totales`);
       const sinVisita=[...new Set(activos)].filter(nombre=>{
         const key=nombre.trim().toUpperCase().replace(/\s+/g,' ');
         if(!key || key.includes('CENTRAL ATLANTA'))return false;
@@ -2052,6 +2053,7 @@ async function renderCVSinVisita(mes, raw){
     const visitadosKeys=new Set(
       raw.map(r=>String(r['CLIENTE VISITADO']||'').trim().toUpperCase().replace(/\s+/g,' ')).filter(Boolean)
     );
+    console.log(`🔍 DEBUG (Control Visitas) mes=${mes}: ${raw.length} registros crudos, ${visitadosKeys.size} clientes distintos visitados, ${activos.length} clientes activos totales`);
     const sinVisita=[...new Set(activos)].filter(nombre=>{
       const key=nombre.trim().toUpperCase().replace(/\s+/g,' ');
       return key && !visitadosKeys.has(key);
