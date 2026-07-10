@@ -175,6 +175,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
 .tab{font-size:12px;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.15s;font-family:var(--font)}
 .tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+#btn-role-coordinadores.active{background:#8b5cf6;border-color:#8b5cf6}
+#coord-tabs .tab.active{background:#8b5cf6;border-color:#8b5cf6}
 
 /* FOOTER */
 .footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
@@ -215,10 +217,10 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
     </div>
     <div class="header-right">
       <div class="tabs" id="role-tabs" style="margin-bottom:0">
-        <button class="tab" id="btn-role-supervisores" onclick="switchRole('supervisores')">👷 Supervisores</button>
+        <button class="tab active" id="btn-role-supervisores" onclick="switchRole('supervisores')">👷 Supervisores</button>
         <button class="tab" id="btn-role-coordinadores" onclick="switchRole('coordinadores')">🧑‍💼 Coordinadores</button>
       </div>
-      <div class="tabs" id="view-tabs" style="margin-bottom:0;display:none">
+      <div class="tabs" id="view-tabs" style="margin-bottom:0">
         <button class="tab active" id="btn-view-revistas" onclick="switchView('revistas')">📋 Revistas</button>
         <button class="tab" id="btn-view-novedades" onclick="switchView('novedades')">⚠️ Novedades</button>
         <button class="tab" id="btn-view-requerimientos" onclick="switchView('requerimientos')">📝 Requerimientos</button>
@@ -233,12 +235,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
     </div>
   </div>
 
-  <div id="role-placeholder" style="text-align:center;padding:60px 20px;color:var(--muted)">
-    <div style="font-size:15px;margin-bottom:6px">👆 Selecciona un rol para comenzar</div>
-    <div style="font-size:12px">Elige <strong style="color:var(--text)">Supervisores</strong> o <strong style="color:var(--text)">Coordinadores</strong> arriba</div>
-  </div>
-
-<div id="view-revistas" style="display:none">
+<div id="view-revistas">
   <!-- SELECTOR DE AÑO -->
   <div class="mes-selector" id="year-selector">
     <span class="mes-selector-label">Año:</span>
@@ -1512,7 +1509,6 @@ function switchView(view){
 // Sheets, distintos caches, distintas variables de mes/año seleccionado.
 function switchRole(role){
   const esSupervisores = role==='supervisores';
-  document.getElementById('role-placeholder').style.display='none';
   document.getElementById('btn-role-supervisores').classList.toggle('active', esSupervisores);
   document.getElementById('btn-role-coordinadores').classList.toggle('active', !esSupervisores);
   document.getElementById('view-tabs').style.display = esSupervisores?'flex':'none';
