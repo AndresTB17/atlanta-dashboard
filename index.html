@@ -129,6 +129,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .sup-kpi-label{font-size:11px;color:var(--muted);margin-top:3px}
 #nov-detail{display:none;background:var(--surface2);border:1px solid #ef4444;border-radius:14px;padding:20px;margin-bottom:18px;animation:fadeUp 0.3s ease}
 #req-detail{display:none;background:var(--surface2);border:1px solid #8b5cf6;border-radius:14px;padding:20px;margin-bottom:18px;animation:fadeUp 0.3s ease}
+#cv-detail{display:none;background:var(--surface2);border:1px solid #06b6d4;border-radius:14px;padding:20px;margin-bottom:18px;animation:fadeUp 0.3s ease}
+#vuln-detail{display:none;background:var(--surface2);border:1px solid #f97316;border-radius:14px;padding:20px;margin-bottom:18px;animation:fadeUp 0.3s ease}
 .nov-report{background:var(--surface);border-radius:10px;padding:14px;margin-bottom:10px}
 .nov-report-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}
 .nov-tipo-badge{font-size:10px;padding:3px 9px;border-radius:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px}
@@ -210,10 +212,18 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       </div>
     </div>
     <div class="header-right">
+      <div class="tabs" id="role-tabs" style="margin-bottom:0">
+        <button class="tab active" id="btn-role-supervisores" onclick="switchRole('supervisores')">👷 Supervisores</button>
+        <button class="tab" id="btn-role-coordinadores" onclick="switchRole('coordinadores')">🧑‍💼 Coordinadores</button>
+      </div>
       <div class="tabs" id="view-tabs" style="margin-bottom:0">
         <button class="tab active" id="btn-view-revistas" onclick="switchView('revistas')">📋 Revistas</button>
         <button class="tab" id="btn-view-novedades" onclick="switchView('novedades')">⚠️ Novedades</button>
         <button class="tab" id="btn-view-requerimientos" onclick="switchView('requerimientos')">📝 Requerimientos</button>
+      </div>
+      <div class="tabs" id="coord-tabs" style="margin-bottom:0;display:none">
+        <button class="tab active" id="btn-view-control-visitas" onclick="switchViewCoord('control_visitas')">📋 Control Visitas</button>
+        <button class="tab" id="btn-view-vulnerabilidad" onclick="switchViewCoord('vulnerabilidad')">🛡️ Vulnerabilidad</button>
       </div>
       <div class="badge"><span class="badge-dot"></span>En vivo</div>
       <div class="update-time" id="uptime">—</div>
@@ -588,6 +598,170 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   </div>
 </div><!-- /view-requerimientos -->
 
+<div id="view-control-visitas" style="display:none">
+  <!-- SELECTOR DE AÑO (COORDINADORES - CONTROL VISITAS) -->
+  <div class="mes-selector" id="year-selector-cv">
+    <span class="mes-selector-label">Año:</span>
+  </div>
+  <!-- SELECTOR DE MES -->
+  <div class="mes-selector" id="mes-selector-cv">
+    <span class="mes-selector-label">Mes:</span>
+  </div>
+
+  <div id="loading-cv"><div class="spinner"></div><p>Cargando control de visitas...</p></div>
+  <div id="error-cv"></div>
+
+  <div id="dashboard-cv">
+    <div id="mes-loading-cv"><div class="spinner" style="width:24px;height:24px;margin:0 auto 8px"></div>Cargando mes...</div>
+
+    <div class="sc-grid">
+      <div class="sc" style="--accent-color:#3b82f6">
+        <div class="sc-label">Total visitas</div>
+        <div class="sc-value" id="cvsc-total">—</div>
+        <div class="sc-delta"><span id="cvsc-coord">—</span> coordinadores activos</div>
+        <div class="sc-bar-track"><div class="sc-bar-fill" id="cvbar-total" style="width:0%"></div></div>
+      </div>
+      <div class="sc" style="--accent-color:#f59e0b">
+        <div class="sc-label">Con compromiso</div>
+        <div class="sc-value" id="cvsc-compromiso">—</div>
+        <div class="sc-delta">Compromisos adquiridos con clientes</div>
+        <div class="sc-bar-track"><div class="sc-bar-fill" id="cvbar-compromiso" style="width:0%;background:#f59e0b"></div></div>
+      </div>
+      <div class="sc" style="--accent-color:#10b981">
+        <div class="sc-label">Clientes visitados</div>
+        <div class="sc-value" id="cvsc-clientes">—</div>
+        <div class="sc-delta">Puntos distintos en el mes</div>
+        <div class="sc-bar-track"><div class="sc-bar-fill" id="cvbar-clientes" style="width:0%;background:#10b981"></div></div>
+      </div>
+      <div class="sc" style="--accent-color:#8b5cf6">
+        <div class="sc-label">Mes</div>
+        <div class="sc-value" id="cvsc-mes" style="font-size:22px">—</div>
+        <div class="sc-delta">Visitas registradas en Altum</div>
+        <div class="sc-bar-track"><div class="sc-bar-fill" id="cvbar-mes" style="width:100%;background:#8b5cf6"></div></div>
+      </div>
+    </div>
+
+    <div class="row-full">
+      <div class="card">
+        <div class="card-title">Visitas por coordinador — mes completo</div>
+        <table class="sup-table">
+          <thead><tr><th>#</th><th>Coordinador</th><th>Visitas</th><th>Con compromiso</th><th>Clientes distintos</th><th style="width:20%">Progreso</th></tr></thead>
+          <tbody id="cv-sup-body"></tbody>
+        </table>
+        <div class="click-hint">👆 Haz clic en un coordinador para ver el detalle de sus visitas</div>
+      </div>
+    </div>
+
+    <div class="row-full">
+      <div class="card">
+        <div class="card-title">Cliente y compromiso — mes completo</div>
+        <div id="cv-cliente-tabla"></div>
+      </div>
+    </div>
+
+    <div id="cv-detail">
+      <div class="sup-detail-header">
+        <div>
+          <div class="sup-detail-name" id="cvdetail-name">—</div>
+          <div class="sup-detail-sub" id="cvdetail-sub">—</div>
+        </div>
+        <button class="close-btn" onclick="closeCVSupervisor()">✕ Cerrar</button>
+      </div>
+      <div id="cvdetail-list"></div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-text">Fuente: Altum Forms (Control de Visitas Clientes) → Google Sheets</div>
+      <div class="footer-text" id="footer-info-cv"></div>
+    </div>
+    <div class="footer-dev">Desarrollado por <strong style="color:#f0f4ff">Andrés Torres</strong> · Científico de Datos</div>
+    <div class="footer-text" style="text-align:center;width:100%;margin-top:2px">Soporte: info@apecol.com.co</div>
+    <div class="footer-text" style="text-align:center;width:100%;margin-top:2px"><strong style="color:#f0f4ff">© 2026 APECOLOMBIA SAS</strong></div>
+  </div>
+</div><!-- /view-control-visitas -->
+
+<div id="view-vulnerabilidad" style="display:none">
+  <!-- SELECTOR DE AÑO (COORDINADORES - VULNERABILIDAD) -->
+  <div class="mes-selector" id="year-selector-vuln">
+    <span class="mes-selector-label">Año:</span>
+  </div>
+  <!-- SELECTOR DE MES -->
+  <div class="mes-selector" id="mes-selector-vuln">
+    <span class="mes-selector-label">Mes:</span>
+  </div>
+
+  <div id="loading-vuln"><div class="spinner"></div><p>Cargando pruebas de vulnerabilidad...</p></div>
+  <div id="error-vuln"></div>
+
+  <div id="dashboard-vuln">
+    <div id="mes-loading-vuln"><div class="spinner" style="width:24px;height:24px;margin:0 auto 8px"></div>Cargando mes...</div>
+
+    <div class="sc-grid">
+      <div class="sc" style="--accent-color:#3b82f6">
+        <div class="sc-label">Total pruebas</div>
+        <div class="sc-value" id="vsc-total">—</div>
+        <div class="sc-delta"><span id="vsc-coord">—</span> coordinadores activos</div>
+        <div class="sc-bar-track"><div class="sc-bar-fill" id="vbar-total" style="width:0%"></div></div>
+      </div>
+      <div class="sc" style="--accent-color:#ef4444">
+        <div class="sc-label">Vulnerado</div>
+        <div class="sc-value" id="vsc-vulnerado">—</div>
+        <div class="sc-delta">Se logró vulnerar la seguridad</div>
+        <div class="sc-bar-track"><div class="sc-bar-fill" id="vbar-vulnerado" style="width:0%;background:#ef4444"></div></div>
+      </div>
+      <div class="sc" style="--accent-color:#10b981">
+        <div class="sc-label">Vigilante reaccionó</div>
+        <div class="sc-value" id="vsc-reacciono">—</div>
+        <div class="sc-delta">De las pruebas realizadas</div>
+        <div class="sc-bar-track"><div class="sc-bar-fill" id="vbar-reacciono" style="width:0%;background:#10b981"></div></div>
+      </div>
+      <div class="sc" style="--accent-color:#8b5cf6">
+        <div class="sc-label">Puestos evaluados</div>
+        <div class="sc-value" id="vsc-puestos">—</div>
+        <div class="sc-delta">Puestos distintos en el mes</div>
+        <div class="sc-bar-track"><div class="sc-bar-fill" id="vbar-puestos" style="width:0%;background:#8b5cf6"></div></div>
+      </div>
+    </div>
+
+    <div class="row-full">
+      <div class="card">
+        <div class="card-title">Pruebas por coordinador — mes completo</div>
+        <table class="sup-table">
+          <thead><tr><th>#</th><th>Coordinador</th><th>Pruebas</th><th>Vulnerado</th><th>Vigilante reaccionó</th><th style="width:20%">Progreso</th></tr></thead>
+          <tbody id="vuln-sup-body"></tbody>
+        </table>
+        <div class="click-hint">👆 Haz clic en un coordinador para ver el detalle de sus pruebas</div>
+      </div>
+    </div>
+
+    <div class="row-full">
+      <div class="card">
+        <div class="card-title">Puesto y resultado — mes completo</div>
+        <div id="vuln-cliente-tabla"></div>
+      </div>
+    </div>
+
+    <div id="vuln-detail">
+      <div class="sup-detail-header">
+        <div>
+          <div class="sup-detail-name" id="vulndetail-name">—</div>
+          <div class="sup-detail-sub" id="vulndetail-sub">—</div>
+        </div>
+        <button class="close-btn" onclick="closeVulnSupervisor()">✕ Cerrar</button>
+      </div>
+      <div id="vulndetail-list"></div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-text">Fuente: Altum Forms (Pruebas de Vulnerabilidad) → Google Sheets</div>
+      <div class="footer-text" id="footer-info-vuln"></div>
+    </div>
+    <div class="footer-dev">Desarrollado por <strong style="color:#f0f4ff">Andrés Torres</strong> · Científico de Datos</div>
+    <div class="footer-text" style="text-align:center;width:100%;margin-top:2px">Soporte: info@apecol.com.co</div>
+    <div class="footer-text" style="text-align:center;width:100%;margin-top:2px"><strong style="color:#f0f4ff">© 2026 APECOLOMBIA SAS</strong></div>
+  </div>
+</div><!-- /view-vulnerabilidad -->
+
 </div>
 </div>
 
@@ -631,6 +805,9 @@ if(sessionStorage.getItem(SK)==='1'){
 const REACCIONES_SHEET_ID = '1pJCYoxAn0yhXdpFw3LEK2GWgEboHTTz6ewty2jmvvks';
 // REQUERIMIENTOS_SHEET_ID: reemplaza por el ID del libro "Altum Visitas Clientes - Atlanta"
 const REQUERIMIENTOS_SHEET_ID = '1sZdPE6JUg88nB5STzxRJX335RzvfFfKTcR-3GTe74-o';
+// Sheets de COORDINADORES (independientes de los de Supervisores)
+const CONTROL_VISITAS_SHEET_ID = '1dQ5Q7X9KU2PxS9GiprbIUqf3bOO6ZRnNGl2SmuzmkAE';
+const VULNERABILIDAD_SHEET_ID = '1X3phRIq6qPVNBdtQvNjCSdl0JUpgEsB3gxwZB3NORqw';
 
 function gvizUrl(s, sheetId=SHEET_ID){return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(s)}`;}
 
@@ -1138,6 +1315,8 @@ function renderRecorridos(data,supFiltro){
 // ═══════════════════════════════════════════════════════════
 let novInit=false;
 let reqInit=false;
+let cvInit=false;
+let vulnInit=false;
 let allKpisNov=[], allResumenNov=[];
 let novRawCache={};
 let novMesSel='', novSupSel='';
@@ -1156,6 +1335,44 @@ function switchView(view){
   if(view==='requerimientos' && !reqInit){
     reqInit=true;
     initRequerimientos();
+  }
+}
+
+// ── ROL: Supervisores / Coordinadores ──
+// Los datos y el estado de cada rol están totalmente aislados: distintos
+// Sheets, distintos caches, distintas variables de mes/año seleccionado.
+function switchRole(role){
+  const esSupervisores = role==='supervisores';
+  document.getElementById('btn-role-supervisores').classList.toggle('active', esSupervisores);
+  document.getElementById('btn-role-coordinadores').classList.toggle('active', !esSupervisores);
+  document.getElementById('view-tabs').style.display = esSupervisores?'flex':'none';
+  document.getElementById('coord-tabs').style.display = esSupervisores?'none':'flex';
+
+  // Ocultar TODAS las vistas primero (de ambos roles)
+  ['view-revistas','view-novedades','view-requerimientos','view-control-visitas','view-vulnerabilidad']
+    .forEach(id=>document.getElementById(id).style.display='none');
+  ['btn-view-revistas','btn-view-novedades','btn-view-requerimientos','btn-view-control-visitas','btn-view-vulnerabilidad']
+    .forEach(id=>document.getElementById(id)?.classList.remove('active'));
+
+  if(esSupervisores){
+    switchView('revistas');
+  } else {
+    switchViewCoord('control_visitas');
+  }
+}
+
+function switchViewCoord(view){
+  document.getElementById('view-control-visitas').style.display=view==='control_visitas'?'block':'none';
+  document.getElementById('view-vulnerabilidad').style.display=view==='vulnerabilidad'?'block':'none';
+  document.getElementById('btn-view-control-visitas').classList.toggle('active',view==='control_visitas');
+  document.getElementById('btn-view-vulnerabilidad').classList.toggle('active',view==='vulnerabilidad');
+  if(view==='control_visitas' && !cvInit){
+    cvInit=true;
+    initControlVisitas();
+  }
+  if(view==='vulnerabilidad' && !vulnInit){
+    vulnInit=true;
+    initVulnerabilidad();
   }
 }
 
@@ -1527,6 +1744,340 @@ function closeReqSupervisor(){
   document.getElementById('req-detail').style.display='none';
   reqSupSel='';
   document.querySelectorAll('#req-sup-body tr.selected').forEach(tr=>tr.classList.remove('selected'));
+}
+
+// ═══════════════════════════════════════════════════════════
+// VISTA CONTROL DE VISITAS (Coordinadores)
+// ═══════════════════════════════════════════════════════════
+let allKpisCV=[], allResumenCV=[];
+let cvRawCache={};
+let cvMesSel='', cvSupSel='';
+
+function cvMesAnoToKey(mesAno){
+  const [mm,yy]=String(mesAno).split('/');
+  return `control_visitas_${yy}_${mm.padStart(2,'0')}`;
+}
+
+async function initControlVisitas(){
+  try{
+    [allKpisCV,allResumenCV]=await Promise.all([
+      fetchSheet('kpis_control_visitas', CONTROL_VISITAS_SHEET_ID),
+      fetchSheetSafe('resumen_coordinador_visitas', CONTROL_VISITAS_SHEET_ID)
+    ]);
+    if(!allKpisCV.length)throw new Error('La hoja kpis_control_visitas está vacía');
+
+    const meses=[...new Set(allKpisCV.map(r=>String(r.mes_año||'')).filter(Boolean))];
+
+    const defaultMesCV=buildYearMonthSelector(meses, {
+      yearContainerId:'year-selector-cv',
+      monthContainerId:'mes-selector-cv',
+      onSelectMonth: async(m)=>{
+        cvMesSel=m; cvSupSel='';
+        closeCVSupervisor();
+        await cargarYRenderCVMes(m);
+      }
+    });
+
+    cvMesSel=defaultMesCV;
+    await cargarYRenderCVMes(cvMesSel);
+
+    document.getElementById('loading-cv').style.display='none';
+    document.getElementById('dashboard-cv').style.display='block';
+  }catch(err){
+    document.getElementById('loading-cv').style.display='none';
+    const el=document.getElementById('error-cv');
+    el.style.display='block';
+    el.innerHTML=`<strong>Error al cargar control de visitas</strong><br><br>${err.message}<br><br>
+    Verifica que CONTROL_VISITAS_SHEET_ID esté puesto correctamente en el código, y que la hoja
+    "Altum Coordinadores - Control Visitas" esté compartida como "Cualquier persona con el enlace puede ver".`;
+  }
+}
+
+async function getCVRawMes(mesAno){
+  const key=cvMesAnoToKey(mesAno);
+  if(!cvRawCache[key]){
+    cvRawCache[key]=await fetchSheetSafe(key, CONTROL_VISITAS_SHEET_ID);
+  }
+  return cvRawCache[key];
+}
+
+async function cargarYRenderCVMes(mes){
+  document.getElementById('mes-loading-cv').style.display='block';
+  try{
+    const raw=await getCVRawMes(mes);
+    renderCVMes(mes, raw);
+  }finally{
+    document.getElementById('mes-loading-cv').style.display='none';
+  }
+}
+
+function renderCVMes(mes, raw){
+  const kpisMes=allKpisCV.filter(r=>String(r.mes_año||'')===mes);
+  const l=kpisMes[kpisMes.length-1];
+  if(!l){console.warn('Sin KPIs de control de visitas para mes',mes);return;}
+
+  const total=num(l.total_visitas), conCompromiso=num(l.con_compromiso);
+  const clientes=num(l.clientes_visitados), coord=num(l.coordinadores_activos);
+
+  document.getElementById('cvsc-total').textContent=fmt(total);
+  document.getElementById('cvsc-coord').innerHTML=`<span>${coord}</span> coordinadores activos`;
+  document.getElementById('cvsc-compromiso').textContent=fmt(conCompromiso);
+  document.getElementById('cvsc-clientes').textContent=fmt(clientes);
+  document.getElementById('cvsc-mes').textContent=mesLabel(mes);
+  document.getElementById('footer-info-cv').textContent=`${mesLabel(mes)} · ${fmt(total)} visitas`;
+
+  setTimeout(()=>{
+    document.getElementById('cvbar-total').style.width='100%';
+    document.getElementById('cvbar-compromiso').style.width=total>0?(conCompromiso/total*100)+'%':'0%';
+    document.getElementById('cvbar-clientes').style.width=total>0?Math.min(clientes/total*100,100)+'%':'0%';
+  },200);
+
+  const resumenMes=allResumenCV.filter(r=>String(r.mes_año||'')===mes)
+    .sort((a,b)=>num(b.total_visitas)-num(a.total_visitas));
+  const maxTot=resumenMes.length?Math.max(...resumenMes.map(r=>num(r.total_visitas))):1;
+  document.getElementById('cv-sup-body').innerHTML=resumenMes.length?
+    resumenMes.map((r,i)=>{
+      const u=String(r.Usuario||'').trim();
+      const short=u.split(' ').slice(-2).join(' ');
+      const t=num(r.total_visitas);
+      return `<tr class="clickable" onclick="selectCVSupervisor('${u.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
+        <td><span class="rank-badge" style="background:${SUP_COLORS[i%10]}22;color:${SUP_COLORS[i%10]}">${i+1}</span></td>
+        <td><span class="sup-name" title="${u}">${short}</span></td>
+        <td><span style="font-family:var(--mono);font-weight:500">${fmt(t)}</span></td>
+        <td>${fmt(num(r.con_compromiso))}</td>
+        <td>${fmt(num(r.clientes_distintos))}</td>
+        <td><div class="sup-bar-wrap"><div class="sup-bar-track"><div class="sup-bar-fill" style="width:${(t/maxTot*100).toFixed(0)}%;background:${SUP_COLORS[i%10]}"></div></div></div></td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="6" class="no-data">Sin visitas este mes</td></tr>';
+
+  renderCVClienteTabla(raw);
+}
+
+function renderCVClienteTabla(raw){
+  const rows=[...raw].sort((a,b)=>toISODate(b.Fecha).localeCompare(toISODate(a.Fecha)));
+  const el=document.getElementById('cv-cliente-tabla');
+  if(!rows.length){el.innerHTML='<div class="no-data">Sin visitas este mes</div>';return;}
+  el.innerHTML=`<div style="max-height:360px;overflow-y:auto"><table class="rec-table">
+    <thead><tr><th>Fecha</th><th>Cliente</th><th>Compromiso</th><th>Coordinador</th></tr></thead>
+    <tbody>${rows.map(r=>{
+      const sup=String(r.Usuario||'').split(' ').slice(-2).join(' ');
+      const compromiso=r['COMPROMISOS']||'—';
+      return `<tr>
+        <td style="font-family:var(--mono);font-size:12px">${toISODate(r.Fecha)}</td>
+        <td><span class="cliente-name" title="${r['CLIENTE VISITADO']||''}">${r['CLIENTE VISITADO']||'—'}</span></td>
+        <td><span class="cliente-name" title="${compromiso}">${compromiso}</span></td>
+        <td><span class="sup-name" title="${r.Usuario||''}">${sup}</span></td>
+      </tr>`;
+    }).join('')}</tbody></table></div>`;
+}
+
+function selectCVSupervisor(sup){
+  cvSupSel=sup;
+  const raw=cvRawCache[cvMesAnoToKey(cvMesSel)]||[];
+  const visitas=raw.filter(r=>String(r.Usuario||'').trim()===sup)
+    .sort((a,b)=>toISODate(b.Fecha).localeCompare(toISODate(a.Fecha)));
+
+  document.getElementById('cvdetail-name').textContent=sup;
+  document.getElementById('cvdetail-sub').textContent=`${mesLabel(cvMesSel)} · ${visitas.length} visitas`;
+
+  document.getElementById('cvdetail-list').innerHTML=visitas.length?
+    `<div style="max-height:420px;overflow-y:auto">${visitas.map(r=>{
+      return `<div class="nov-report">
+        <div class="nov-report-head">
+          <span class="nov-tipo-badge" style="background:rgba(6,182,212,0.14);color:#67e8f9">VISITA</span>
+          <span class="nov-report-meta">${toISODate(r.Fecha)} · ${String(r.Hora||'').slice(0,8)}</span>
+        </div>
+        <div class="nov-report-meta" style="margin-bottom:6px">
+          <strong style="color:var(--text)">${r['CLIENTE VISITADO']||'—'}</strong> · ${r['NOMBRE DE LA PERSONA VISITADA']||''} ${r['CARGO DE LA PERSONA VISITADA']?'('+r['CARGO DE LA PERSONA VISITADA']+')':''}
+        </div>
+        ${r['COMPROMISOS']?`<div class="nov-report-body" style="margin-bottom:6px"><strong>Compromiso:</strong> ${r['COMPROMISOS']}</div>`:''}
+        ${r['OBSERVACIONES']?`<div class="nov-report-body" style="margin-bottom:6px"><strong>Observaciones:</strong> ${r['OBSERVACIONES']}</div>`:''}
+        ${r['COMENTARIOS']?`<div class="nov-report-body"><strong>Comentarios:</strong> ${r['COMENTARIOS']}</div>`:''}
+      </div>`;
+    }).join('')}</div>` :
+    '<div class="no-data">Sin visitas para este coordinador en este mes.</div>';
+
+  const panel=document.getElementById('cv-detail');
+  panel.style.display='block';
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  document.querySelectorAll('#cv-sup-body tr.clickable').forEach(tr=>{
+    tr.classList.toggle('selected',tr.querySelector('.sup-name')?.title===sup);
+  });
+}
+
+function closeCVSupervisor(){
+  document.getElementById('cv-detail').style.display='none';
+  cvSupSel='';
+  document.querySelectorAll('#cv-sup-body tr.selected').forEach(tr=>tr.classList.remove('selected'));
+}
+
+// ═══════════════════════════════════════════════════════════
+// VISTA PRUEBAS DE VULNERABILIDAD (Coordinadores)
+// ═══════════════════════════════════════════════════════════
+let allKpisVuln=[], allResumenVuln=[];
+let vulnRawCache={};
+let vulnMesSel='', vulnSupSel='';
+
+function vulnMesAnoToKey(mesAno){
+  const [mm,yy]=String(mesAno).split('/');
+  return `vulnerabilidad_${yy}_${mm.padStart(2,'0')}`;
+}
+
+async function initVulnerabilidad(){
+  try{
+    [allKpisVuln,allResumenVuln]=await Promise.all([
+      fetchSheet('kpis_vulnerabilidad', VULNERABILIDAD_SHEET_ID),
+      fetchSheetSafe('resumen_coordinador_vulnerabilidad', VULNERABILIDAD_SHEET_ID)
+    ]);
+    if(!allKpisVuln.length)throw new Error('La hoja kpis_vulnerabilidad está vacía');
+
+    const meses=[...new Set(allKpisVuln.map(r=>String(r.mes_año||'')).filter(Boolean))];
+
+    const defaultMesVuln=buildYearMonthSelector(meses, {
+      yearContainerId:'year-selector-vuln',
+      monthContainerId:'mes-selector-vuln',
+      onSelectMonth: async(m)=>{
+        vulnMesSel=m; vulnSupSel='';
+        closeVulnSupervisor();
+        await cargarYRenderVulnMes(m);
+      }
+    });
+
+    vulnMesSel=defaultMesVuln;
+    await cargarYRenderVulnMes(vulnMesSel);
+
+    document.getElementById('loading-vuln').style.display='none';
+    document.getElementById('dashboard-vuln').style.display='block';
+  }catch(err){
+    document.getElementById('loading-vuln').style.display='none';
+    const el=document.getElementById('error-vuln');
+    el.style.display='block';
+    el.innerHTML=`<strong>Error al cargar pruebas de vulnerabilidad</strong><br><br>${err.message}<br><br>
+    Verifica que VULNERABILIDAD_SHEET_ID esté puesto correctamente en el código, y que la hoja
+    "Altum Coordinadores - Vulnerabilidad" esté compartida como "Cualquier persona con el enlace puede ver".`;
+  }
+}
+
+async function getVulnRawMes(mesAno){
+  const key=vulnMesAnoToKey(mesAno);
+  if(!vulnRawCache[key]){
+    vulnRawCache[key]=await fetchSheetSafe(key, VULNERABILIDAD_SHEET_ID);
+  }
+  return vulnRawCache[key];
+}
+
+async function cargarYRenderVulnMes(mes){
+  document.getElementById('mes-loading-vuln').style.display='block';
+  try{
+    const raw=await getVulnRawMes(mes);
+    renderVulnMes(mes, raw);
+  }finally{
+    document.getElementById('mes-loading-vuln').style.display='none';
+  }
+}
+
+function renderVulnMes(mes, raw){
+  const kpisMes=allKpisVuln.filter(r=>String(r.mes_año||'')===mes);
+  const l=kpisMes[kpisMes.length-1];
+  if(!l){console.warn('Sin KPIs de vulnerabilidad para mes',mes);return;}
+
+  const total=num(l.total_pruebas), vulnerado=num(l.vulnerado);
+  const reacciono=num(l.vigilante_reacciono), coord=num(l.coordinadores_activos), puestos=num(l.puestos_evaluados);
+
+  document.getElementById('vsc-total').textContent=fmt(total);
+  document.getElementById('vsc-coord').innerHTML=`<span>${coord}</span> coordinadores activos`;
+  document.getElementById('vsc-vulnerado').textContent=fmt(vulnerado);
+  document.getElementById('vsc-reacciono').textContent=fmt(reacciono);
+  document.getElementById('vsc-puestos').textContent=fmt(puestos);
+  document.getElementById('footer-info-vuln').textContent=`${mesLabel(mes)} · ${fmt(total)} pruebas`;
+
+  setTimeout(()=>{
+    document.getElementById('vbar-total').style.width='100%';
+    document.getElementById('vbar-vulnerado').style.width=total>0?(vulnerado/total*100)+'%':'0%';
+    document.getElementById('vbar-reacciono').style.width=total>0?(reacciono/total*100)+'%':'0%';
+    document.getElementById('vbar-puestos').style.width=total>0?Math.min(puestos/total*100,100)+'%':'0%';
+  },200);
+
+  const resumenMes=allResumenVuln.filter(r=>String(r.mes_año||'')===mes)
+    .sort((a,b)=>num(b.total_pruebas)-num(a.total_pruebas));
+  const maxTot=resumenMes.length?Math.max(...resumenMes.map(r=>num(r.total_pruebas))):1;
+  document.getElementById('vuln-sup-body').innerHTML=resumenMes.length?
+    resumenMes.map((r,i)=>{
+      const u=String(r.Usuario||'').trim();
+      const short=u.split(' ').slice(-2).join(' ');
+      const t=num(r.total_pruebas);
+      return `<tr class="clickable" onclick="selectVulnSupervisor('${u.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
+        <td><span class="rank-badge" style="background:${SUP_COLORS[i%10]}22;color:${SUP_COLORS[i%10]}">${i+1}</span></td>
+        <td><span class="sup-name" title="${u}">${short}</span></td>
+        <td><span style="font-family:var(--mono);font-weight:500">${fmt(t)}</span></td>
+        <td>${fmt(num(r.vulnerado))}</td>
+        <td>${fmt(num(r.vigilante_reacciono))}</td>
+        <td><div class="sup-bar-wrap"><div class="sup-bar-track"><div class="sup-bar-fill" style="width:${(t/maxTot*100).toFixed(0)}%;background:${SUP_COLORS[i%10]}"></div></div></div></td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="6" class="no-data">Sin pruebas este mes</td></tr>';
+
+  renderVulnClienteTabla(raw);
+}
+
+function renderVulnClienteTabla(raw){
+  const rows=[...raw].sort((a,b)=>toISODate(b.Fecha).localeCompare(toISODate(a.Fecha)));
+  const el=document.getElementById('vuln-cliente-tabla');
+  if(!rows.length){el.innerHTML='<div class="no-data">Sin pruebas este mes</div>';return;}
+  el.innerHTML=`<div style="max-height:360px;overflow-y:auto"><table class="rec-table">
+    <thead><tr><th>Fecha</th><th>Puesto</th><th>Vulnerado</th><th>Reaccionó</th><th>Coordinador</th></tr></thead>
+    <tbody>${rows.map(r=>{
+      const sup=String(r.Usuario||'').split(' ').slice(-2).join(' ');
+      const vulnerado=String(r['SE LOGRÓ VULNERAR LA SEGURIDAD']||'').trim().toUpperCase()==='SI';
+      const reacciono=String(r['EL VIGILANTE REACCIONÓ A LA PRUEBA']||'').trim().toUpperCase()==='SI';
+      return `<tr>
+        <td style="font-family:var(--mono);font-size:12px">${toISODate(r.Fecha)}</td>
+        <td><span class="cliente-name" title="${r['PUESTO A REALIZAR PRUEBA']||''}">${r['PUESTO A REALIZAR PRUEBA']||'—'}</span></td>
+        <td><span class="time-badge ${vulnerado?'time-warn':'time-ok'}">${vulnerado?'SI':'NO'}</span></td>
+        <td><span class="time-badge ${reacciono?'time-ok':'time-warn'}">${reacciono?'SI':'NO'}</span></td>
+        <td><span class="sup-name" title="${r.Usuario||''}">${sup}</span></td>
+      </tr>`;
+    }).join('')}</tbody></table></div>`;
+}
+
+function selectVulnSupervisor(sup){
+  vulnSupSel=sup;
+  const raw=vulnRawCache[vulnMesAnoToKey(vulnMesSel)]||[];
+  const pruebas=raw.filter(r=>String(r.Usuario||'').trim()===sup)
+    .sort((a,b)=>toISODate(b.Fecha).localeCompare(toISODate(a.Fecha)));
+
+  document.getElementById('vulndetail-name').textContent=sup;
+  document.getElementById('vulndetail-sub').textContent=`${mesLabel(vulnMesSel)} · ${pruebas.length} pruebas`;
+
+  document.getElementById('vulndetail-list').innerHTML=pruebas.length?
+    `<div style="max-height:420px;overflow-y:auto">${pruebas.map(r=>{
+      const vulnerado=String(r['SE LOGRÓ VULNERAR LA SEGURIDAD']||'').trim().toUpperCase()==='SI';
+      return `<div class="nov-report">
+        <div class="nov-report-head">
+          <span class="nov-tipo-badge" style="background:${vulnerado?'rgba(239,68,68,0.14)':'rgba(16,185,129,0.14)'};color:${vulnerado?'#fca5a5':'#6ee7b7'}">${vulnerado?'VULNERADO':'SEGURO'}</span>
+          <span class="nov-report-meta">${toISODate(r.Fecha)} · ${String(r.Hora||'').slice(0,8)}</span>
+        </div>
+        <div class="nov-report-meta" style="margin-bottom:6px">
+          <strong style="color:var(--text)">${r['PUESTO A REALIZAR PRUEBA']||'—'}</strong> · ${r['MODO DE VULNERAR EL SERVICIO']||''}
+        </div>
+        ${r['MEDIOS O VEHICULO UTILIZADOS']?`<div class="nov-report-meta" style="margin-bottom:6px">Medio: ${r['MEDIOS O VEHICULO UTILIZADOS']}</div>`:''}
+        ${r['RECOMENDACIONES CON RESPECTO A LA PRUEBA']?`<div class="nov-report-body" style="margin-bottom:6px"><strong>Recomendaciones:</strong> ${r['RECOMENDACIONES CON RESPECTO A LA PRUEBA']}</div>`:''}
+        ${r['ACCIONES A MEJORAR']?`<div class="nov-report-body"><strong>Acciones a mejorar:</strong> ${r['ACCIONES A MEJORAR']}</div>`:''}
+      </div>`;
+    }).join('')}</div>` :
+    '<div class="no-data">Sin pruebas para este coordinador en este mes.</div>';
+
+  const panel=document.getElementById('vuln-detail');
+  panel.style.display='block';
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  document.querySelectorAll('#vuln-sup-body tr.clickable').forEach(tr=>{
+    tr.classList.toggle('selected',tr.querySelector('.sup-name')?.title===sup);
+  });
+}
+
+function closeVulnSupervisor(){
+  document.getElementById('vuln-detail').style.display='none';
+  vulnSupSel='';
+  document.querySelectorAll('#vuln-sup-body tr.selected').forEach(tr=>tr.classList.remove('selected'));
 }
 
 if(sessionStorage.getItem(SK)==='1') init();
