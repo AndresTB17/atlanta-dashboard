@@ -71,6 +71,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 
 /* SCORECARDS */
 .sc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.sc-grid-3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:900px){.sc-grid-3{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:900px){.sc-grid{grid-template-columns:repeat(2,1fr)}}
 .sc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color 0.2s;animation:fadeUp 0.4s ease both}
 .sc:hover{border-color:var(--border2)}
@@ -213,10 +215,10 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
     </div>
     <div class="header-right">
       <div class="tabs" id="role-tabs" style="margin-bottom:0">
-        <button class="tab active" id="btn-role-supervisores" onclick="switchRole('supervisores')">👷 Supervisores</button>
+        <button class="tab" id="btn-role-supervisores" onclick="switchRole('supervisores')">👷 Supervisores</button>
         <button class="tab" id="btn-role-coordinadores" onclick="switchRole('coordinadores')">🧑‍💼 Coordinadores</button>
       </div>
-      <div class="tabs" id="view-tabs" style="margin-bottom:0">
+      <div class="tabs" id="view-tabs" style="margin-bottom:0;display:none">
         <button class="tab active" id="btn-view-revistas" onclick="switchView('revistas')">📋 Revistas</button>
         <button class="tab" id="btn-view-novedades" onclick="switchView('novedades')">⚠️ Novedades</button>
         <button class="tab" id="btn-view-requerimientos" onclick="switchView('requerimientos')">📝 Requerimientos</button>
@@ -231,7 +233,12 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
     </div>
   </div>
 
-<div id="view-revistas">
+  <div id="role-placeholder" style="text-align:center;padding:60px 20px;color:var(--muted)">
+    <div style="font-size:15px;margin-bottom:6px">👆 Selecciona un rol para comenzar</div>
+    <div style="font-size:12px">Elige <strong style="color:var(--text)">Supervisores</strong> o <strong style="color:var(--text)">Coordinadores</strong> arriba</div>
+  </div>
+
+<div id="view-revistas" style="display:none">
   <!-- SELECTOR DE AÑO -->
   <div class="mes-selector" id="year-selector">
     <span class="mes-selector-label">Año:</span>
@@ -338,6 +345,14 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       <div class="card">
         <div class="card-title">Top 10 clientes con menos revistas <span class="card-badge">Sin Central Atlanta</span></div>
         <div id="clientes-bottom"></div>
+      </div>
+    </div>
+
+    <!-- FILA 2.6: Revistas por ciudad/zona -->
+    <div class="row-full">
+      <div class="card">
+        <div class="card-title">Revistas por ciudad (zona) — mes completo</div>
+        <div id="revistas-ciudad-chart"></div>
       </div>
     </div>
 
@@ -614,18 +629,12 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   <div id="dashboard-cv">
     <div id="mes-loading-cv"><div class="spinner" style="width:24px;height:24px;margin:0 auto 8px"></div>Cargando mes...</div>
 
-    <div class="sc-grid">
+    <div class="sc-grid sc-grid-3">
       <div class="sc" style="--accent-color:#3b82f6">
         <div class="sc-label">Total visitas</div>
         <div class="sc-value" id="cvsc-total">—</div>
         <div class="sc-delta"><span id="cvsc-coord">—</span> coordinadores activos</div>
         <div class="sc-bar-track"><div class="sc-bar-fill" id="cvbar-total" style="width:0%"></div></div>
-      </div>
-      <div class="sc" style="--accent-color:#f59e0b">
-        <div class="sc-label">Con compromiso</div>
-        <div class="sc-value" id="cvsc-compromiso">—</div>
-        <div class="sc-delta">Compromisos adquiridos con clientes</div>
-        <div class="sc-bar-track"><div class="sc-bar-fill" id="cvbar-compromiso" style="width:0%;background:#f59e0b"></div></div>
       </div>
       <div class="sc" style="--accent-color:#10b981">
         <div class="sc-label">Clientes visitados</div>
@@ -638,6 +647,13 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
         <div class="sc-value" id="cvsc-mes" style="font-size:22px">—</div>
         <div class="sc-delta">Visitas registradas en Altum</div>
         <div class="sc-bar-track"><div class="sc-bar-fill" id="cvbar-mes" style="width:100%;background:#8b5cf6"></div></div>
+      </div>
+    </div>
+
+    <div class="row-full">
+      <div class="card">
+        <div class="card-title">Visitas por ciudad — mes completo</div>
+        <div id="cv-ciudad-chart"></div>
       </div>
     </div>
 
@@ -1069,6 +1085,7 @@ function renderMes(mes, raw){
   renderSupMes(rawNorm, dia);
   renderSupProm(rawNorm, dia);
   renderClientesRevistas(rawNorm);
+  renderRevistasCiudad(rawNorm);
 
   // Recorridos del mes
   const recMes=allRec.filter(r=>String(r.mes_año||'')===mes);
@@ -1099,6 +1116,28 @@ function drawDayBars(rawRows){
       <div class="daybar-day">${dia}</div>
     </div>`;
   }).join('')+'</div>';
+}
+
+function renderRevistasCiudad(rawRows){
+  const counts={};
+  rawRows.forEach(r=>{
+    const z=String(r['ZONA']||'').trim();
+    if(!z||z==='nan')return;
+    counts[z]=(counts[z]||0)+1;
+  });
+  const entries=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const el=document.getElementById('revistas-ciudad-chart');
+  if(!entries.length){el.innerHTML='<div class="no-data">Sin datos de ciudad/zona</div>';return;}
+  const maxV=entries[0][1];
+  el.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">
+    ${entries.map(([zona,c],i)=>`<div style="display:flex;align-items:center;gap:10px">
+      <span style="flex:1;font-size:12px" title="${zona}">${zona}</span>
+      <div style="width:200px;height:8px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${(c/maxV*100).toFixed(0)}%;background:${SUP_COLORS[i%10]};border-radius:4px"></div>
+      </div>
+      <span style="font-family:var(--mono);font-size:12px;color:var(--muted);width:28px;text-align:right">${c}</span>
+    </div>`).join('')}
+  </div>`;
 }
 
 function renderClientesRevistas(rawRows){
@@ -1343,6 +1382,7 @@ function switchView(view){
 // Sheets, distintos caches, distintas variables de mes/año seleccionado.
 function switchRole(role){
   const esSupervisores = role==='supervisores';
+  document.getElementById('role-placeholder').style.display='none';
   document.getElementById('btn-role-supervisores').classList.toggle('active', esSupervisores);
   document.getElementById('btn-role-coordinadores').classList.toggle('active', !esSupervisores);
   document.getElementById('view-tabs').style.display = esSupervisores?'flex':'none';
@@ -1816,21 +1856,21 @@ function renderCVMes(mes, raw){
   const l=kpisMes[kpisMes.length-1];
   if(!l){console.warn('Sin KPIs de control de visitas para mes',mes);return;}
 
-  const total=num(l.total_visitas), conCompromiso=num(l.con_compromiso);
+  const total=num(l.total_visitas);
   const clientes=num(l.clientes_visitados), coord=num(l.coordinadores_activos);
 
   document.getElementById('cvsc-total').textContent=fmt(total);
   document.getElementById('cvsc-coord').innerHTML=`<span>${coord}</span> coordinadores activos`;
-  document.getElementById('cvsc-compromiso').textContent=fmt(conCompromiso);
   document.getElementById('cvsc-clientes').textContent=fmt(clientes);
   document.getElementById('cvsc-mes').textContent=mesLabel(mes);
   document.getElementById('footer-info-cv').textContent=`${mesLabel(mes)} · ${fmt(total)} visitas`;
 
   setTimeout(()=>{
     document.getElementById('cvbar-total').style.width='100%';
-    document.getElementById('cvbar-compromiso').style.width=total>0?(conCompromiso/total*100)+'%':'0%';
     document.getElementById('cvbar-clientes').style.width=total>0?Math.min(clientes/total*100,100)+'%':'0%';
   },200);
+
+  renderCVCiudad(raw);
 
   const resumenMes=allResumenCV.filter(r=>String(r.mes_año||'')===mes)
     .sort((a,b)=>num(b.total_visitas)-num(a.total_visitas));
@@ -1851,6 +1891,28 @@ function renderCVMes(mes, raw){
     }).join('') : '<tr><td colspan="6" class="no-data">Sin visitas este mes</td></tr>';
 
   renderCVClienteTabla(raw);
+}
+
+function renderCVCiudad(raw){
+  const counts={};
+  raw.forEach(r=>{
+    const c=String(r['CIUDAD']||'').trim();
+    if(!c||c==='nan')return;
+    counts[c]=(counts[c]||0)+1;
+  });
+  const entries=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const el=document.getElementById('cv-ciudad-chart');
+  if(!entries.length){el.innerHTML='<div class="no-data">Sin datos de ciudad</div>';return;}
+  const maxV=entries[0][1];
+  el.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">
+    ${entries.map(([ciudad,c],i)=>`<div style="display:flex;align-items:center;gap:10px">
+      <span style="flex:1;font-size:12px" title="${ciudad}">${ciudad}</span>
+      <div style="width:200px;height:8px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${(c/maxV*100).toFixed(0)}%;background:${SUP_COLORS[i%10]};border-radius:4px"></div>
+      </div>
+      <span style="font-family:var(--mono);font-size:12px;color:var(--muted);width:28px;text-align:right">${c}</span>
+    </div>`).join('')}
+  </div>`;
 }
 
 function renderCVClienteTabla(raw){
